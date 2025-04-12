@@ -1,103 +1,370 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Paper,
+  AppBar,
+  Toolbar,
+  Link,
+  Avatar,
+  Card,
+  CardContent,
+  CardMedia,
+  IconButton,
+} from "@mui/material";
+import {
+  IconSchool,
+  IconBook,
+  IconUsers,
+  IconChartBar,
+  IconHome,
+  IconInfoCircle,
+  IconMail,
+  IconUsersGroup,
+  IconBrandGithub,
+  IconBrandLinkedin,
+  IconBrandTwitter,
+} from "@tabler/icons-react";
+
+export default function HomePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { scrollY } = useScroll();
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.5]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return <div>جاري التحميل...</div>;
+  }
+
+  const features = [
+    {
+      title: "إدارة الطلاب",
+      description: "تسجيل وإدارة بيانات الطلاب وتتبع سيرهم الدراسي",
+      icon: <IconUsers size={48} color="#184271" />,
+      id: "students",
+    },
+    {
+      title: "إدارة المواد",
+      description: "إضافة وتعديل المواد الدراسية وتوزيعها على الأساتذة",
+      icon: <IconBook size={48} color="#184271" />,
+      id: "courses",
+    },
+    {
+      title: "التقارير والإحصائيات",
+      description: "متابعة أداء الطلاب وتحليل النتائج",
+      icon: <IconChartBar size={48} color="#184271" />,
+      id: "reports",
+    },
+    {
+      title: "إدارة الكلية",
+      description: "إدارة الأقسام والبرامج الدراسية",
+      icon: <IconSchool size={48} color="#184271" />,
+      id: "college",
+    },
+  ];
+
+  const teamMembers = [
+    {
+      name: "أحمد محمد",
+      role: "مطور الواجهة الأمامية",
+      image: "/team/ahmed.jpg",
+      social: {
+        github: "https://github.com/ahmed",
+        linkedin: "https://linkedin.com/in/ahmed",
+        twitter: "https://twitter.com/ahmed",
+      },
+    },
+    {
+      name: "محمد علي",
+      role: "مطور الواجهة الخلفية",
+      image: "/team/mohamed.jpg",
+      social: {
+        github: "https://github.com/mohamed",
+        linkedin: "https://linkedin.com/in/mohamed",
+        twitter: "https://twitter.com/mohamed",
+      },
+    },
+    {
+      name: "سارة أحمد",
+      role: "مصممة واجهة المستخدم",
+      image: "/team/sara.jpg",
+      social: {
+        github: "https://github.com/sara",
+        linkedin: "https://linkedin.com/in/sara",
+        twitter: "https://twitter.com/sara",
+      },
+    },
+  ];
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <AppBar position="fixed" sx={{ backgroundColor: "white", color: "black" }}>
+        <Toolbar>
+          <Box sx={{ flexGrow: 1, display: "flex", gap: 2 }}>
+            <Link href="#home" color="inherit" underline="none">
+              <Button startIcon={<IconHome />}>الرئيسية</Button>
+            </Link>
+            <Link href="#about" color="inherit" underline="none">
+              <Button startIcon={<IconInfoCircle />}>عن النظام</Button>
+            </Link>
+            <Link href="#features" color="inherit" underline="none">
+              <Button startIcon={<IconChartBar />}>المميزات</Button>
+            </Link>
+            <Link href="#team" color="inherit" underline="none">
+              <Button startIcon={<IconUsersGroup />}>فريق العمل</Button>
+            </Link>
+            <Link href="#contact" color="inherit" underline="none">
+              <Button startIcon={<IconMail />}>اتصل بنا</Button>
+            </Link>
+          </Box>
+        </Toolbar>
+      </AppBar>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      <Box component="main" sx={{ pt: 8 }}>
+        <motion.section
+          id="home"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <Container maxWidth="lg">
+            <Box sx={{ my: 8, textAlign: "center" }}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Typography variant="h2" component="h1" gutterBottom>
+                  مرحباً بك في نظام إدارة الكلية
+                </Typography>
+                <Typography variant="h5" color="text.secondary" paragraph>
+                  نظام متكامل لإدارة كلية الحاسبات والمعلومات
+                </Typography>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Button
+                    variant="contained"
+                    size="large"
+                    sx={{ mt: 4 }}
+                    onClick={() => router.push("/dashboard")}
+                  >
+                    ابدأ الآن
+                  </Button>
+                </motion.div>
+              </motion.div>
+            </Box>
+          </Container>
+        </motion.section>
+
+        <motion.section
+          id="about"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ once: true }}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <Container maxWidth="lg">
+            <Box sx={{ my: 8 }}>
+              <Typography variant="h3" component="h2" gutterBottom align="center">
+                عن النظام
+              </Typography>
+              <Typography variant="body1" paragraph align="center">
+                نظام إدارة الكلية هو نظام متكامل يهدف إلى تسهيل إدارة العمليات الأكاديمية والإدارية في الكلية.
+                يوفر النظام مجموعة من الأدوات والمميزات التي تساعد في إدارة الطلاب والمواد الدراسية والتقارير.
+              </Typography>
+            </Box>
+          </Container>
+        </motion.section>
+
+        <motion.section
+          id="features"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ once: true }}
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <Container maxWidth="lg">
+            <Box sx={{ my: 8 }}>
+              <Typography variant="h3" component="h2" gutterBottom align="center">
+                مميزات النظام
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "1fr 1fr",
+                    md: "1fr 1fr 1fr 1fr",
+                  },
+                  gap: 4,
+                  mt: 4,
+                }}
+              >
+                {features.map((feature, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <Paper
+                      elevation={3}
+                      sx={{
+                        p: 3,
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Box sx={{ mb: 2 }}>{feature.icon}</Box>
+                      <Typography variant="h6" component="h3" gutterBottom>
+                        {feature.title}
+                      </Typography>
+                      <Typography color="text.secondary">
+                        {feature.description}
+                      </Typography>
+                    </Paper>
+                  </motion.div>
+                ))}
+              </Box>
+            </Box>
+          </Container>
+        </motion.section>
+
+        <motion.section
+          id="team"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ once: true }}
+        >
+          <Container maxWidth="lg">
+            <Box sx={{ my: 8 }}>
+              <Typography variant="h3" component="h2" gutterBottom align="center">
+                فريق العمل
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "1fr 1fr",
+                    md: "1fr 1fr 1fr",
+                  },
+                  gap: 4,
+                  mt: 4,
+                }}
+              >
+                {teamMembers.map((member, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <Card sx={{ maxWidth: 345, mx: "auto" }}>
+                      <CardMedia
+                        component="img"
+                        height="200"
+                        image={member.image}
+                        alt={member.name}
+                      />
+                      <CardContent>
+                        <Typography gutterBottom variant="h5" component="div">
+                          {member.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {member.role}
+                        </Typography>
+                        <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                          <IconButton
+                            href={member.social.github}
+                            target="_blank"
+                            color="primary"
+                          >
+                            <IconBrandGithub />
+                          </IconButton>
+                          <IconButton
+                            href={member.social.linkedin}
+                            target="_blank"
+                            color="primary"
+                          >
+                            <IconBrandLinkedin />
+                          </IconButton>
+                          <IconButton
+                            href={member.social.twitter}
+                            target="_blank"
+                            color="primary"
+                          >
+                            <IconBrandTwitter />
+                          </IconButton>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </Box>
+            </Box>
+          </Container>
+        </motion.section>
+
+        <motion.section
+          id="contact"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ once: true }}
+        >
+          <Container maxWidth="lg">
+            <Box sx={{ my: 8 }}>
+              <Typography variant="h3" component="h2" gutterBottom align="center">
+                اتصل بنا
+              </Typography>
+              <Typography variant="body1" paragraph align="center">
+                للاستفسارات أو المساعدة، يرجى التواصل معنا عبر البريد الإلكتروني أو الهاتف.
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 2,
+                  mt: 4,
+                }}
+              >
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button variant="contained" color="primary">
+                    البريد الإلكتروني
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button variant="contained" color="primary">
+                    الهاتف
+                  </Button>
+                </motion.div>
+              </Box>
+            </Box>
+          </Container>
+        </motion.section>
+      </Box>
+    </>
   );
 }

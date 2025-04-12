@@ -1,0 +1,144 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+    ADMIN
+    PROFESSOR
+    STUDENT
+}
+
+model User {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    email     String   @unique
+    password  String
+    name      String
+    role      UserRole @default(STUDENT)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    department   Department? @relation(fields: [departmentId], references: [id])
+    departmentId String?     @db.ObjectId
+
+    // Student specific
+    enrollments      Enrollment[]
+    sentMessages     Message[]    @relation("SentMessages")
+    receivedMessages Message[]    @relation("ReceivedMessages")
+    examResults      ExamResult[]
+
+    // Professor specific
+    courses           Course[]
+    exams             Exam[]
+    GraduationProject GraduationProject[]
+    Message           Message[]
+}
+
+model Department {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    name      String
+    code      String   @unique
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    users   User[]
+    courses Course[]
+}
+
+model Course {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    name        String
+    code        String   @unique
+    description String
+    credits     Int
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    department   Department   @relation(fields: [departmentId], references: [id])
+    departmentId String       @db.ObjectId
+    professor    User         @relation(fields: [professorId], references: [id])
+    professorId  String       @db.ObjectId
+    enrollments  Enrollment[]
+    exams        Exam[]
+}
+
+model Enrollment {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    student   User     @relation(fields: [studentId], references: [id])
+    studentId String   @db.ObjectId
+    course    Course   @relation(fields: [courseId], references: [id])
+    courseId  String   @db.ObjectId
+    grade     Float?
+    status    String   @default("ENROLLED")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([studentId, courseId])
+}
+
+model Exam {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    title       String
+    description String
+    type        String // QUIZ or FINAL
+    startTime   DateTime
+    endTime     DateTime
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    course      Course       @relation(fields: [courseId], references: [id])
+    courseId    String       @db.ObjectId
+    professor   User         @relation(fields: [professorId], references: [id])
+    professorId String       @db.ObjectId
+    results     ExamResult[]
+}
+
+model ExamResult {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    score     Float
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    student   User   @relation(fields: [studentId], references: [id])
+    studentId String @db.ObjectId
+    exam      Exam   @relation(fields: [examId], references: [id])
+    examId    String @db.ObjectId
+}
+
+model Message {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    content   String
+    isRead    Boolean  @default(false)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    sender     User    @relation("SentMessages", fields: [senderId], references: [id])
+    senderId   String  @db.ObjectId
+    receiver   User    @relation("ReceivedMessages", fields: [receiverId], references: [id])
+    receiverId String  @db.ObjectId
+    User       User?   @relation(fields: [userId], references: [id])
+    userId     String? @db.ObjectId
+}
+
+model GraduationProject {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    title       String
+    description String
+    status      String   @default("AVAILABLE")
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    student   User?   @relation(fields: [studentId], references: [id])
+    studentId String? @db.ObjectId
+}
