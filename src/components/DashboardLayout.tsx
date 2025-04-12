@@ -102,13 +102,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
 
     return (
-        <Box sx={{ display: "flex" }}>
+        <Box sx={{ display: "flex", direction: "rtl" }}>
             <CssBaseline />
             <AppBar
                 position="fixed"
+
                 sx={{
+                    direction: "rtl",
+                    left: { sm: `${drawerWidth}px` },
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
-                    ml: { sm: `${drawerWidth}px` },
+                    mr: { sm: `${drawerWidth}px` },
                 }}
             >
                 <Toolbar>
@@ -156,7 +159,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </AppBar>
             <Box
                 component="nav"
-                sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+
+                sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 }, direction: "rtl" }}
             >
                 <Drawer
                     variant="temporary"

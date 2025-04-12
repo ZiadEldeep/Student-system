@@ -40,9 +40,9 @@ export default function HomePage() {
   const opacity = useTransform(scrollY, [0, 300], [1, 0.5]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
+    // if (status === "unauthenticated") {
+    //   router.push("/login");
+    // }
   }, [status, router]);
 
   if (status === "loading") {

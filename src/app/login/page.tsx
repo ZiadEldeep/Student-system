@@ -12,15 +12,26 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { IconLogin } from "@tabler/icons-react";
-
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-
+    const router = useRouter();
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         // TODO: Implement login logic
+        const res = await signIn("credentials", {
+            email,
+            password,
+            redirect: false,
+        });
+        if (res?.error) {
+            setError(res.error);
+        } else {
+            router.push("/dashboard");
+        }
     };
 
     return (
@@ -94,6 +105,14 @@ export default function LoginPage() {
                             >
                                 تسجيل الدخول
                             </Button>
+                            <Box sx={{ textAlign: "center" }}>
+                                <Button
+                                    onClick={() => router.push("/register")}
+                                    sx={{ textTransform: "none" }}
+                                >
+                                    ليس لديك حساب؟ سجل هنا
+                                </Button>
+                            </Box>
                         </form>
                     </Paper>
                 </Box>
