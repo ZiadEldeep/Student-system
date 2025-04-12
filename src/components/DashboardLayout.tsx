@@ -161,6 +161,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 component="nav"
 
                 sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 }, direction: "rtl" }}
+
             >
                 <Drawer
                     variant="temporary"
@@ -174,6 +175,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         "& .MuiDrawer-paper": {
                             boxSizing: "border-box",
                             width: drawerWidth,
+                            right: 0,
                         },
                     }}
                 >
@@ -186,6 +188,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         "& .MuiDrawer-paper": {
                             boxSizing: "border-box",
                             width: drawerWidth,
+                            right: 0,
                         },
                     }}
                     open
