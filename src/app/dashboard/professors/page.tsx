@@ -23,53 +23,14 @@ import {
     TextField,
     Select,
     MenuItem,
-    Card,
-    CardContent,
-    Avatar,
-    Stack,
-    Chip,
-    Divider,
-    Tabs,
-    Tab,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    FormControl,
-    InputLabel,
-    OutlinedInput,
-    InputAdornment,
-    Skeleton,
 } from "@mui/material";
 import {
     IconEdit,
     IconTrash,
     IconPlus,
     IconSearch,
-    IconBook,
-    IconUsers,
-    IconChartBar,
-    IconCalendar,
-    IconMessage,
-    IconSettings,
-    IconUser,
-    IconSchool,
-    IconClock,
-    IconCheck,
-    IconX,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
-
-interface User {
-    id: string;
-    role: string;
-    name: string;
-    email: string;
-    password: string;
-    createdAt: Date;
-    updatedAt: Date;
-    departmentId: string | null;
-}
 
 interface Professor {
     id: string;
@@ -80,45 +41,7 @@ interface Professor {
         name: string;
     };
     password?: string;
-    courses?: Course[];
-    students?: Student[];
-    schedule?: Schedule[];
 }
-
-interface Course {
-    id: string;
-    name: string;
-    code: string;
-    credits: number;
-    students: number;
-    schedule: string;
-}
-
-interface Student {
-    id: string;
-    name: string;
-    email: string;
-    attendance: number;
-    grades: {
-        midterm: number;
-        final: number;
-        assignments: number[];
-    };
-}
-
-interface Schedule {
-    id: string;
-    day: string;
-    time: string;
-    course: string;
-    room: string;
-}
-
-const defaultUser: Partial<User> = {
-    name: 'مستخدم',
-    email: 'لا يوجد بريد إلكتروني',
-    role: 'مستخدم'
-};
 
 export default function ProfessorsPage() {
     const { data: session, status } = useSession();
@@ -129,20 +52,13 @@ export default function ProfessorsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
-    const [activeTab, setActiveTab] = useState(0);
-    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setIsClient(true);
         if (status === "unauthenticated") {
             router.push("/login");
         }
-        if (status === "authenticated") {
-            fetchProfessors();
-            fetchDepartments();
-        }
+        fetchProfessors();
+        fetchDepartments();
     }, [status, router]);
 
     const fetchProfessors = async () => {
@@ -237,261 +153,93 @@ export default function ProfessorsPage() {
         }
     };
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-        setActiveTab(newValue);
-    };
-
     const filteredProfessors = professors.filter((professor) =>
         professor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         professor.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (!isClient || status === "loading") {
-        return (
-            <DashboardLayout>
-                <Box sx={{ p: 3 }}>
-                    <Skeleton variant="text" width={200} height={40} />
-                    <Skeleton variant="text" width={300} height={24} />
-                    <Box sx={{ mt: 4 }}>
-                        <Skeleton variant="rectangular" height={200} />
-                    </Box>
-                </Box>
-            </DashboardLayout>
-        );
+    if (status === "loading") {
+        return <div>جاري التحميل...</div>;
     }
-
-    if (status === "unauthenticated") {
-        return null;
-    }
-
-    const user = session?.user ? {
-        name: session.user.name || defaultUser.name || '',
-        email: session.user.email || defaultUser.email || '',
-        role: session.user.role || defaultUser.role || ''
-    } : {
-        name: defaultUser.name || '',
-        email: defaultUser.email || '',
-        role: defaultUser.role || ''
-    };
 
     return (
         <DashboardLayout>
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    لوحة تحكم الأستاذ
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary">
-                    مرحباً بك، {user.name}
+                    إدارة الأساتذة
                 </Typography>
             </Box>
 
-            {/* Profile Section */}
-            <Box sx={{ display: 'flex', gap: 3, mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
-                <Box sx={{ flex: 1, maxWidth: { md: '33%' } }}>
-                    <Card>
-                        <CardContent>
-                            <Stack direction="row" spacing={2} alignItems="center">
-                                <Avatar sx={{ width: 80, height: 80 }}>
-                                    <IconUser size={40} />
-                                </Avatar>
-                                <Box>
-                                    <Typography variant="h6">{user.name}</Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {user.email}
-                                    </Typography>
-                                    <Chip
-                                        label={user.role}
-                                        size="small"
+            <Box
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 3,
+                    mb: 3,
+                }}
+            >
+                <Box>
+                    <TextField
+                        fullWidth
+                        placeholder="بحث عن أستاذ..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        InputProps={{
+                            startAdornment: <IconSearch style={{ marginRight: 8 }} />,
+                        }}
+                    />
+                </Box>
+                <Box sx={{ textAlign: "left" }}>
+                    <Button
+                        variant="contained"
+                        startIcon={<IconPlus />}
+                        onClick={() => handleOpenDialog()}
+                    >
+                        إضافة أستاذ جديد
+                    </Button>
+                </Box>
+            </Box>
+
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>الاسم</TableCell>
+                            <TableCell>البريد الإلكتروني</TableCell>
+                            <TableCell>القسم</TableCell>
+                            <TableCell>الإجراءات</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filteredProfessors.map((professor) => (
+                            <motion.tr
+                                key={professor.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <TableCell>{professor.name}</TableCell>
+                                <TableCell>{professor.email}</TableCell>
+                                <TableCell>{professor.department.name}</TableCell>
+                                <TableCell>
+                                    <IconButton
                                         color="primary"
-                                        sx={{ mt: 1 }}
-                                    />
-                                </Box>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-                </Box>
-                <Box sx={{ flex: 2 }}>
-                    <Card>
-                        <CardContent>
-                            <Tabs value={activeTab} onChange={handleTabChange}>
-                                <Tab icon={<IconBook />} label="المواد" />
-                                <Tab icon={<IconUsers />} label="الطلاب" />
-                                <Tab icon={<IconCalendar />} label="الجدول" />
-                                <Tab icon={<IconChartBar />} label="التقارير" />
-                            </Tabs>
-                            <Box sx={{ mt: 2 }}>
-                                {activeTab === 0 && (
-                                    <List>
-                                        {selectedProfessor?.courses?.map((course) => (
-                                            <ListItem key={course.id}>
-                                                <ListItemIcon>
-                                                    <IconBook />
-                                                </ListItemIcon>
-                                                <ListItemText
-                                                    primary={course.name}
-                                                    secondary={`${course.students} طالب - ${course.schedule}`}
-                                                />
-                                                <Chip
-                                                    label={`${course.credits} ساعة`}
-                                                    size="small"
-                                                    color="primary"
-                                                    variant="outlined"
-                                                />
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                )}
-                                {activeTab === 1 && (
-                                    <List>
-                                        {selectedProfessor?.students?.map((student) => (
-                                            <ListItem key={student.id}>
-                                                <ListItemText
-                                                    primary={student.name}
-                                                    secondary={
-                                                        <>
-                                                            <Typography component="span" variant="body2">
-                                                                الحضور: {student.attendance}%
-                                                            </Typography>
-                                                            <br />
-                                                            <Typography component="span" variant="body2">
-                                                                المتوسط: {(
-                                                                    (student.grades.midterm + student.grades.final) / 2
-                                                                ).toFixed(2)}
-                                                            </Typography>
-                                                        </>
-                                                    }
-                                                />
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => setSelectedStudent(student)}
-                                                >
-                                                    <IconEdit />
-                                                </IconButton>
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                )}
-                                {activeTab === 2 && (
-                                    <List>
-                                        {selectedProfessor?.schedule?.map((item) => (
-                                            <ListItem key={item.id}>
-                                                <ListItemIcon>
-                                                    <IconClock />
-                                                </ListItemIcon>
-                                                <ListItemText
-                                                    primary={item.course}
-                                                    secondary={`${item.day} - ${item.time} (${item.room})`}
-                                                />
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                )}
-                                {activeTab === 3 && (
-                                    <Box>
-                                        <Typography variant="h6" gutterBottom>
-                                            إحصائيات
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', gap: 2 }}>
-                                            <Paper sx={{ p: 2, flex: 1 }}>
-                                                <Typography variant="h6">متوسط الحضور</Typography>
-                                                <Typography variant="h4">85%</Typography>
-                                            </Paper>
-                                            <Paper sx={{ p: 2, flex: 1 }}>
-                                                <Typography variant="h6">متوسط الدرجات</Typography>
-                                                <Typography variant="h4">78%</Typography>
-                                            </Paper>
-                                        </Box>
-                                    </Box>
-                                )}
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Box>
-            </Box>
-
-            {/* Quick Actions */}
-            <Box sx={{ mb: 4 }}>
-                <Paper sx={{ p: 3 }}>
-                    <Stack direction="row" spacing={2}>
-                        <Button
-                            variant="contained"
-                            startIcon={<IconPlus />}
-                            onClick={() => handleOpenDialog()}
-                        >
-                            إضافة أستاذ جديد
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<IconMessage />}
-                        >
-                            الرسائل
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<IconSettings />}
-                        >
-                            الإعدادات
-                        </Button>
-                    </Stack>
-                </Paper>
-            </Box>
-
-            {/* Professors Table */}
-            <Box sx={{ mt: 4 }}>
-                <Paper sx={{ p: 3 }}>
-                    <Box sx={{ mb: 3 }}>
-                        <TextField
-                            fullWidth
-                            placeholder="بحث عن أستاذ..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            InputProps={{
-                                startAdornment: <IconSearch style={{ marginRight: 8 }} />,
-                            }}
-                        />
-                    </Box>
-                    <TableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>الاسم</TableCell>
-                                    <TableCell>البريد الإلكتروني</TableCell>
-                                    <TableCell>القسم</TableCell>
-                                    <TableCell>الإجراءات</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredProfessors.map((professor) => (
-                                    <motion.tr
-                                        key={professor.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3 }}
+                                        onClick={() => handleOpenDialog(professor)}
                                     >
-                                        <TableCell>{professor.name}</TableCell>
-                                        <TableCell>{professor.email}</TableCell>
-                                        <TableCell>{professor.department.name}</TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                color="primary"
-                                                onClick={() => handleOpenDialog(professor)}
-                                            >
-                                                <IconEdit />
-                                            </IconButton>
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleDeleteProfessor(professor.id)}
-                                            >
-                                                <IconTrash />
-                                            </IconButton>
-                                        </TableCell>
-                                    </motion.tr>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Paper>
-            </Box>
+                                        <IconEdit />
+                                    </IconButton>
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => handleDeleteProfessor(professor.id)}
+                                    >
+                                        <IconTrash />
+                                    </IconButton>
+                                </TableCell>
+                            </motion.tr>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>
