@@ -1,13 +1,33 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
+import { Prisma, UserRole } from '@prisma/client'
 // GET /api/students
-export async function GET() {
+export async function GET(request: Request) {
+    const searchParams = new URL(request.url).searchParams;
+    const departmentId = searchParams.get("departmentId");
+    const studentId = searchParams.get("studentId");
+    const role = searchParams.get("role");
+    const professorId = searchParams.get("professorId");
+    let where: Prisma.UserWhereInput = {};
+    if (departmentId) {
+        where.departmentId = departmentId;
+    }
+    if (studentId) {
+        where.id = studentId;
+    }
+    if (professorId) {
+        where.courses = {
+            some: {
+                professorId,
+            },
+        };
+    }
+    if (role) {
+        where.role = role as UserRole;
+    }
     try {
         const students = await prisma.user.findMany({
-            where: {
-                role: 'STUDENT',
-            },
+            where,
             include: {
                 department: true,
             },

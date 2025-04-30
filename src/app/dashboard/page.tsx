@@ -13,6 +13,7 @@ import {
     ListItem,
     ListItemText,
     ListItemIcon,
+    Skeleton,
 } from "@mui/material";
 import {
     IconBook,
@@ -22,6 +23,10 @@ import {
     IconCertificate,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
+import StudentDashboard from "@/components/student/studentDashboard";
+import ProfessorDashboard from "@/components/professors/professorsDashboard";
+
+
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -32,9 +37,8 @@ export default function DashboardPage() {
             router.push("/login");
         }
     }, [status, router]);
-
     if (status === "loading") {
-        return <div>جاري التحميل...</div>;
+        return <Skeleton variant="rectangular" height={100} />;
     }
 
     const getDashboardContent = () => {
@@ -110,138 +114,10 @@ export default function DashboardPage() {
                         </Grid>
                     </Grid>
                 );
-
-            case "PROFESSOR":
-                return (
-                    <Grid container spacing={3}>
-                        <Grid component="div" className="grid-cols-6 max-sm:grid-cols-12" >
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5 }}
-                            >
-                                <Paper sx={{ p: 3 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        المواد التي تدرسها
-                                    </Typography>
-                                    <List>
-                                        <ListItem>
-                                            <ListItemIcon>
-                                                <IconBook />
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary="برمجة الويب"
-                                                secondary="40 طالب"
-                                            />
-                                        </ListItem>
-                                        <ListItem>
-                                            <ListItemIcon>
-                                                <IconBook />
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary="قواعد البيانات"
-                                                secondary="35 طالب"
-                                            />
-                                        </ListItem>
-                                    </List>
-                                </Paper>
-                            </motion.div>
-                        </Grid>
-                        <Grid component="div" className="grid-cols-6 max-sm:grid-cols-12" >
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.2 }}
-                            >
-                                <Paper sx={{ p: 3 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        الامتحانات القادمة
-                                    </Typography>
-                                    <List>
-                                        <ListItem>
-                                            <ListItemText
-                                                primary="امتحان برمجة الويب"
-                                                secondary="غداً - 10:00 صباحاً"
-                                            />
-                                        </ListItem>
-                                        <ListItem>
-                                            <ListItemText
-                                                primary="كويز قواعد البيانات"
-                                                secondary="بعد غد - 11:00 صباحاً"
-                                            />
-                                        </ListItem>
-                                    </List>
-                                </Paper>
-                            </motion.div>
-                        </Grid>
-                    </Grid>
-                );
-
             case "STUDENT":
-                return (
-                    <Grid container spacing={3}>
-                        <Grid component="div" className="grid-cols-6 max-sm:grid-cols-12" >
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5 }}
-                            >
-                                <Paper sx={{ p: 3 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        المواد المسجلة
-                                    </Typography>
-                                    <List>
-                                        <ListItem>
-                                            <ListItemIcon>
-                                                <IconBook />
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary="برمجة الويب"
-                                                secondary="الدرجة: 85"
-                                            />
-                                        </ListItem>
-                                        <ListItem>
-                                            <ListItemIcon>
-                                                <IconBook />
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary="قواعد البيانات"
-                                                secondary="الدرجة: 90"
-                                            />
-                                        </ListItem>
-                                    </List>
-                                </Paper>
-                            </motion.div>
-                        </Grid>
-                        <Grid component="div" className="grid-cols-6 max-sm:grid-cols-12" >
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.2 }}
-                            >
-                                <Paper sx={{ p: 3 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        الامتحانات القادمة
-                                    </Typography>
-                                    <List>
-                                        <ListItem>
-                                            <ListItemText
-                                                primary="امتحان برمجة الويب"
-                                                secondary="غداً - 10:00 صباحاً"
-                                            />
-                                        </ListItem>
-                                        <ListItem>
-                                            <ListItemText
-                                                primary="كويز قواعد البيانات"
-                                                secondary="بعد غد - 11:00 صباحاً"
-                                            />
-                                        </ListItem>
-                                    </List>
-                                </Paper>
-                            </motion.div>
-                        </Grid>
-                    </Grid>
-                );
+                return <StudentDashboard studentId={session?.user?.id as string} />;
+            case "PROFESSOR":
+                return <ProfessorDashboard professorId={session?.user?.id as string} />;
 
             default:
                 return null;

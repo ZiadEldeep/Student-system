@@ -37,6 +37,16 @@ model User {
     exams             Exam[]
     GraduationProject GraduationProject[]
     Message           Message[]
+    students          StudentsProfessor[] @relation("Student")
+    professors        StudentsProfessor[] @relation("Professor")
+}
+
+model StudentsProfessor {
+    id          String @id @default(auto()) @map("_id") @db.ObjectId
+    student     User   @relation(fields: [studentId], references: [id], name: "Student")
+    studentId   String @db.ObjectId
+    professor   User   @relation(fields: [professorId], references: [id], name: "Professor")
+    professorId String @db.ObjectId
 }
 
 model Department {

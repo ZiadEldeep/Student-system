@@ -2,24 +2,23 @@
 
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
     AppBar,
     Box,
     CssBaseline,
-    Drawer,
     IconButton,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
     Toolbar,
     Typography,
     Avatar,
     Menu,
     MenuItem,
     Divider,
+    Button,
+    Drawer,
+    ListItemIcon,
+    ListItemText,
+    List,
 } from "@mui/material";
 import {
     IconMenu2,
@@ -47,7 +46,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const { data: session } = useSession();
     const router = useRouter();
-
+    let pathname = usePathname();
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
@@ -65,13 +64,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     };
 
     const menuItems = [
-        { text: "الرئيسية", icon: <IconHome />, path: "/dashboard" },
-        { text: "المواد", icon: <IconBook />, path: "/dashboard/courses" },
-        { text: "الطلاب", icon: <IconUsers />, path: "/dashboard/students" },
-        { text: "الأقسام", icon: <IconSchool />, path: "/dashboard/departments" },
-        { text: "التقارير", icon: <IconChartBar />, path: "/dashboard/reports" },
-        { text: "المحادثات", icon: <IconMessage />, path: "/dashboard/messages" },
-        { text: "مشاريع التخرج", icon: <IconCertificate />, path: "/dashboard/graduation" },
+        { text: "الرئيسية", icon: <IconHome />, path: "/dashboard", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
+        { text: "المواد", icon: <IconBook />, path: "/dashboard/courses", role: ["PROFESSOR", "ADMIN"] },
+        { text: "الطلاب", icon: <IconUsers />, path: "/dashboard/students", role: ["PROFESSOR", "ADMIN"] },
+        { text: "الأقسام", icon: <IconSchool />, path: "/dashboard/departments", role: ["ADMIN"] },
+        { text: "التقارير", icon: <IconChartBar />, path: "/dashboard/reports", role: ["ADMIN"] },
+        { text: "المحادثات", icon: <IconMessage />, path: "/dashboard/messages", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
+        { text: "مشاريع التخرج", icon: <IconCertificate />, path: "/dashboard/graduation", role: ["ADMIN"] },
     ];
 
     const drawer = (
@@ -88,13 +87,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         key={item.text}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
+                        style={{ display: item.role.includes(session?.user?.role || "") ? "block" : "none" }}
                     >
-                        <ListItem disablePadding>
-                            <ListItemButton onClick={() => router.push(item.path)}>
-                                <ListItemIcon>{item.icon}</ListItemIcon>
-                                <ListItemText primary={item.text} />
-                            </ListItemButton>
-                        </ListItem>
+                        <Button
+                            onClick={() => router.push(item.path)}
+                            startIcon={item.icon}
+                            sx={{
+                                display: "flex",
+                                justifyContent: "flex-start",
+                                padding: 1,
+                                width: "100%",
+                                textTransform: "none",
+                                color: "inherit",
+                            }}
+                        >
+                            {item.text}
+                        </Button>
                     </motion.div>
                 ))}
             </List>
@@ -106,62 +114,92 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <CssBaseline />
             <AppBar
                 position="fixed"
-
                 sx={{
                     direction: "rtl",
-                    left: { sm: `${drawerWidth}px` },
-                    width: { sm: `calc(100% - ${drawerWidth}px)` },
-                    mr: { sm: `${drawerWidth}px` },
+                    left: { sm: `0` },
+                    width: { sm: `100%` },
                 }}
             >
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        sx={{ mr: 2, display: { sm: "none" } }}
-                    >
-                        <IconMenu2 />
-                    </IconButton>
-                    <Box sx={{ flexGrow: 1 }} />
-                    <IconButton onClick={handleMenuOpen}>
-                        <Avatar sx={{ bgcolor: "#184271" }}>
-                            {session?.user?.name?.[0] || "U"}
-                        </Avatar>
-                    </IconButton>
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleMenuClose}
-                    >
-                        <MenuItem onClick={() => router.push("/dashboard/profile")}>
-                            <ListItemIcon>
-                                <IconUser />
-                            </ListItemIcon>
-                            الملف الشخصي
-                        </MenuItem>
-                        <MenuItem onClick={() => router.push("/dashboard/settings")}>
-                            <ListItemIcon>
-                                <IconSettings />
-                            </ListItemIcon>
-                            الإعدادات
-                        </MenuItem>
-                        <Divider />
-                        <MenuItem onClick={handleLogout}>
-                            <ListItemIcon>
-                                <IconLogout />
-                            </ListItemIcon>
-                            تسجيل الخروج
-                        </MenuItem>
-                    </Menu>
-                </Toolbar>
-            </AppBar>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Toolbar sx={{ display: "flex", direction: "rtl" }}>
+                        <IconButton
+                            color="inherit"
+                            aria-label="open drawer"
+                            edge="start"
+                            onClick={handleDrawerToggle}
+                            sx={{ mr: 2, display: { sm: "none" } }}
+                        >
+                            <IconMenu2 />
+                        </IconButton>
+                        <Box sx={{ flexGrow: 1 }} />
+                        <IconButton onClick={handleMenuOpen}>
+                            <Avatar sx={{ bgcolor: "#184271" }}>
+                                {session?.user?.name?.[0] || "U"}
+                            </Avatar>
+                        </IconButton>
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                        >
+                            <MenuItem onClick={() => router.push("/dashboard/profile")}>
+                                <ListItemIcon>
+                                    <IconUser />
+                                </ListItemIcon>
+                                الملف الشخصي
+                            </MenuItem>
+                            <MenuItem onClick={() => router.push("/dashboard/settings")}>
+                                <ListItemIcon>
+                                    <IconSettings />
+                                </ListItemIcon>
+                                الإعدادات
+                            </MenuItem>
+                            <Divider />
+                            <MenuItem onClick={handleLogout}>
+                                <ListItemIcon>
+                                    <IconLogout />
+                                </ListItemIcon>
+                                تسجيل الخروج
+                            </MenuItem>
+                        </Menu>
+                    </Toolbar>
+                    <List sx={{ direction: "rtl", gap: 1 }} className="max-sm:hidden flex" >
+                        {menuItems.map((item) => {
+                            let isActive = item.path === pathname;
+                            return (
+                                <motion.div
+                                    key={item.text}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    style={{ display: item.role.includes(session?.user?.role || "") ? "block" : "none" }}
+                                >
+                                    <Button
+                                        onClick={() => router.push(item.path)}
+                                        startIcon={item.icon}
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "flex-start",
+                                            gap: 2,
+                                            padding: 1,
+                                            width: "100%",
+                                            textTransform: "none",
+                                            color: isActive ? "#184271" : "white",
+                                            backgroundColor: isActive ? "white" : "#184271",
+                                        }}
+                                    >
+                                        {isActive ? <Typography color="#184271">{item.text}</Typography> : <Typography color="white">{item.text}</Typography>}
+                                    </Button>
+                                </motion.div>
+                            )
+                        })}
+                    </List>
+                </Box>
+            </AppBar >
+
             <Box
                 component="nav"
 
-                sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 }, direction: "rtl" }}
-
+                sx={{ width: 0, flexShrink: { sm: 0 }, direction: "rtl" }}
             >
                 <Drawer
                     variant="temporary"
@@ -181,7 +219,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                     {drawer}
                 </Drawer>
-                <Drawer
+                {/* <Drawer
                     variant="permanent"
                     sx={{
                         display: { xs: "none", sm: "block" },
@@ -194,19 +232,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     open
                 >
                     {drawer}
-                </Drawer>
+                </Drawer> */}
             </Box>
+
             <Box
                 component="main"
                 sx={{
                     flexGrow: 1,
                     p: 3,
-                    width: { sm: `calc(100% - ${drawerWidth}px)` },
+                    width: "100vw",
                 }}
             >
                 <Toolbar />
                 {children}
             </Box>
-        </Box>
+        </Box >
     );
-} 
+}

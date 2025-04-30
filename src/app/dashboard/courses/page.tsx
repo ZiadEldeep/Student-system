@@ -26,15 +26,19 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    Autocomplete,
 } from "@mui/material";
 import {
     IconEdit,
     IconTrash,
     IconPlus,
     IconSearch,
+    IconUserPlus,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
-
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { Department, User, Enrollment } from "@prisma/client";
 interface Course {
     id: string;
     name: string;
@@ -49,8 +53,25 @@ interface Course {
         id: string;
         name: string;
     };
+    enrollments: Enrollment[];
     departmentId: string;
     professorId: string;
+}
+let fetchDepartments = async () => {
+    const response = await axios.get("/api/departments");
+    return response.data;
+}
+let fetchProfessors = async () => {
+    const response = await axios.get("/api/professors");
+    return response.data;
+}
+let fetchStudents = async () => {
+    const response = await axios.get("/api/students", {
+        params: {
+            role: "STUDENT",
+        },
+    });
+    return response.data;
 }
 
 export default function CoursesPage() {
@@ -58,9 +79,11 @@ export default function CoursesPage() {
     const router = useRouter();
     const [courses, setCourses] = useState<Course[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
+    const [openAddStudentsDialog, setOpenAddStudentsDialog] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
+    const [selectedStudents, setSelectedStudents] = useState<User[]>([]);
     const [formData, setFormData] = useState({
         name: "",
         code: "",
@@ -68,6 +91,18 @@ export default function CoursesPage() {
         credits: 0,
         departmentId: "",
         professorId: "",
+    });
+    let { data: departments } = useQuery<Department[]>({
+        queryKey: ["departments"],
+        queryFn: fetchDepartments,
+    });
+    let { data: professors } = useQuery<User[]>({
+        queryKey: ["professors"],
+        queryFn: fetchProfessors,
+    });
+    let { data: students } = useQuery<User[]>({
+        queryKey: ["students"],
+        queryFn: fetchStudents,
     });
 
     useEffect(() => {
@@ -87,14 +122,6 @@ export default function CoursesPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
     };
 
     const handleOpenDialog = (course?: Course) => {
@@ -127,9 +154,11 @@ export default function CoursesPage() {
         setSelectedCourse(null);
     };
 
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            console.log(formData)
             const response = await fetch('/api/courses', {
                 method: 'POST',
                 headers: {
@@ -160,10 +189,27 @@ export default function CoursesPage() {
         // TODO: Delete course from API
     };
 
+    const handleAddStudentsToCourse = async (id: string) => {
+        try {
+            // TODO: Add students to course from API
+            let response = await axios.post('/api/enrollments', {
+                courseId: id,
+                studentIds: selectedStudents.map((student) => student.id),
+            });
+            if (response.status === 200) {
+                fetchCourses();
+            }
+            setOpenAddStudentsDialog(false);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     const filteredCourses = courses.filter((course) =>
         course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         course.code.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
 
     if (status === "loading") {
         return <div>جاري التحميل...</div>;
@@ -215,6 +261,7 @@ export default function CoursesPage() {
                             <TableCell>الكود</TableCell>
                             <TableCell>القسم</TableCell>
                             <TableCell>الأستاذ</TableCell>
+                            <TableCell>الطلاب المسجلين</TableCell>
                             <TableCell>الساعات المعتمدة</TableCell>
                             <TableCell>الإجراءات</TableCell>
                         </TableRow>
@@ -232,6 +279,7 @@ export default function CoursesPage() {
                                 <TableCell>{course.department.name}</TableCell>
                                 <TableCell>{course.professor.name}</TableCell>
                                 <TableCell>{course.credits}</TableCell>
+                                <TableCell>{course.enrollments.length}</TableCell>
                                 <TableCell>
                                     <IconButton
                                         color="primary"
@@ -244,6 +292,16 @@ export default function CoursesPage() {
                                         onClick={() => handleDeleteCourse(course.id)}
                                     >
                                         <IconTrash />
+                                    </IconButton>
+                                    {/* add students to course */}
+                                    <IconButton
+                                        color="primary"
+                                        onClick={() => {
+                                            setSelectedCourse(course);
+                                            setOpenAddStudentsDialog(true);
+                                        }}
+                                    >
+                                        <IconUserPlus />
                                     </IconButton>
                                 </TableCell>
                             </motion.tr>
@@ -262,57 +320,94 @@ export default function CoursesPage() {
                             fullWidth
                             label="اسم المادة"
                             value={selectedCourse?.name || ""}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setSelectedCourse({
                                     ...selectedCourse!,
                                     name: e.target.value,
                                 })
-                            }
+                                setFormData({
+                                    ...formData,
+                                    name: e.target.value,
+                                })
+                            }}
                             sx={{ mb: 2 }}
                         />
                         <TextField
                             fullWidth
                             label="كود المادة"
                             value={selectedCourse?.code || ""}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setSelectedCourse({
                                     ...selectedCourse!,
                                     code: e.target.value,
                                 })
-                            }
+                                setFormData({
+                                    ...formData,
+                                    code: e.target.value,
+                                })
+                            }}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="الوصف"
+                            value={selectedCourse?.description || ""}
+                            onChange={(e) => {
+                                setSelectedCourse({
+                                    ...selectedCourse!,
+                                    description: e.target.value,
+                                })
+                                setFormData({
+                                    ...formData,
+                                    description: e.target.value,
+                                })
+                            }}
                             sx={{ mb: 2 }}
                         />
                         <FormControl fullWidth sx={{ mb: 2 }}>
                             <InputLabel>القسم</InputLabel>
                             <Select
                                 value={selectedCourse?.departmentId || ""}
-                                onChange={(e) =>
+                                onChange={(e) => {
                                     setSelectedCourse({
                                         ...selectedCourse!,
                                         departmentId: e.target.value,
                                     })
-                                }
+                                    setFormData({
+                                        ...formData,
+                                        departmentId: e.target.value,
+                                    })
+                                }}
                                 label="القسم"
                             >
-                                <MenuItem value="علوم الحاسب">علوم الحاسب</MenuItem>
-                                <MenuItem value="نظم المعلومات">نظم المعلومات</MenuItem>
-                                <MenuItem value="الذكاء الاصطناعي">الذكاء الاصطناعي</MenuItem>
+                                {departments?.map((department) => (
+                                    <MenuItem key={department.id} value={department.id}>
+                                        {department.name}
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                         <FormControl fullWidth sx={{ mb: 2 }}>
                             <InputLabel>الأستاذ</InputLabel>
                             <Select
                                 value={selectedCourse?.professorId || ""}
-                                onChange={(e) =>
+                                onChange={(e) => {
                                     setSelectedCourse({
                                         ...selectedCourse!,
                                         professorId: e.target.value,
                                     })
-                                }
+                                    setFormData({
+                                        ...formData,
+                                        professorId: e.target.value,
+                                    })
+                                }}
                                 label="الأستاذ"
                             >
-                                <MenuItem value="د. أحمد محمد">د. أحمد محمد</MenuItem>
-                                <MenuItem value="د. سارة أحمد">د. سارة أحمد</MenuItem>
+                                {professors?.map((professor) => (
+                                    <MenuItem key={professor.id} value={professor.id}>
+                                        {professor.name}
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                         <TextField
@@ -320,12 +415,16 @@ export default function CoursesPage() {
                             label="الساعات المعتمدة"
                             type="number"
                             value={selectedCourse?.credits || 0}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setSelectedCourse({
                                     ...selectedCourse!,
                                     credits: parseInt(e.target.value),
                                 })
-                            }
+                                setFormData({
+                                    ...formData,
+                                    credits: parseInt(e.target.value),
+                                })
+                            }}
                         />
                     </Box>
                 </DialogContent>
@@ -336,6 +435,23 @@ export default function CoursesPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
+            {students && <Dialog open={openAddStudentsDialog} onClose={() => setOpenAddStudentsDialog(false)}>
+                <DialogTitle>إضافة طلاب إلى المادة</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ pt: 2 }}>
+                        <Autocomplete
+                            multiple
+                            options={students}
+                            defaultValue={students.filter((student: any) => selectedCourse?.enrollments.map((enrollment: any) => enrollment?.studentId).includes(student.id))}
+                            getOptionLabel={(option) => option.name}
+                            renderInput={(params) => <TextField {...params} label="طلاب" />}
+                            onChange={(event, value) => setSelectedStudents(value)}
+                        />
+                        <Button onClick={() => handleAddStudentsToCourse(selectedCourse?.id || "")}>إضافة</Button>
+                        <Button onClick={() => setOpenAddStudentsDialog(false)}>إلغاء</Button>
+                    </Box>
+                </DialogContent>
+            </Dialog>}
         </DashboardLayout>
     );
 } 

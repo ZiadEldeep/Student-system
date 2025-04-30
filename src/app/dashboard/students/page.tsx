@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
     Box,
@@ -32,7 +33,8 @@ import {
     IconSearch,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
-
+import axios from "axios";
+import { UserRole } from "@prisma/client";
 interface Student {
     id: string;
     name: string;
@@ -59,15 +61,19 @@ export default function StudentsPage() {
         if (status === "unauthenticated") {
             router.push("/login");
         }
-        fetchStudents();
+        fetchStudents(session?.user?.id);
         fetchDepartments();
     }, [status, router]);
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (professorId?: string) => {
         try {
-            const response = await fetch('/api/students');
-            const data = await response.json();
-            setStudents(data);
+            const response = await axios.get('/api/students', {
+                params: {
+                    professorId,
+                    role: "STUDENT",
+                },
+            });
+            setStudents(response.data);
         } catch (error) {
             console.error('Error fetching students:', error);
         } finally {
@@ -77,9 +83,8 @@ export default function StudentsPage() {
 
     const fetchDepartments = async () => {
         try {
-            const response = await fetch('/api/departments');
-            const data = await response.json();
-            setDepartments(data);
+            const response = await axios.get('/api/departments');
+            setDepartments(response.data);
         } catch (error) {
             console.error('Error fetching departments:', error);
         }
@@ -159,6 +164,9 @@ export default function StudentsPage() {
     if (status === "loading") {
         return <div>جاري التحميل...</div>;
     }
+    if (session?.user?.role !== "PROFESSOR" as UserRole) {
+        return notFound();
+    }
 
     return (
         <DashboardLayout>
@@ -219,7 +227,7 @@ export default function StudentsPage() {
                             >
                                 <TableCell>{student.name}</TableCell>
                                 <TableCell>{student.email}</TableCell>
-                                <TableCell>{student.department.name}</TableCell>
+                                <TableCell>{student.department?.name}</TableCell>
                                 <TableCell>{student.status}</TableCell>
                                 <TableCell>
                                     <IconButton
@@ -287,19 +295,19 @@ export default function StudentsPage() {
                         <Select
                             fullWidth
                             label="القسم"
-                            value={selectedStudent?.department.id || ""}
+                            value={selectedStudent?.department?.id || ""}
                             onChange={(e) =>
                                 setSelectedStudent({
                                     ...selectedStudent!,
                                     department: {
                                         id: e.target.value,
-                                        name: departments.find(d => d.id === e.target.value)?.name || '',
+                                        name: departments?.find(d => d.id === e.target.value)?.name || '',
                                     },
                                 })
                             }
                             sx={{ mb: 2 }}
                         >
-                            {departments.map((department) => (
+                            {departments?.map((department) => (
                                 <MenuItem key={department.id} value={department.id}>
                                     {department.name}
                                 </MenuItem>
