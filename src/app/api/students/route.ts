@@ -16,12 +16,14 @@ export async function GET(request: Request) {
         where.id = studentId;
     }
     if (professorId) {
-        where.courses = {
+        where.enrollments = {
             some: {
-                professorId,
+                course: {
+                    professorId,
+                },
             },
-        };
-    }
+        };
+    }
     if (role) {
         where.role = role as UserRole;
     }

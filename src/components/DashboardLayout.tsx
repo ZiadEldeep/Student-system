@@ -69,8 +69,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { text: "الطلاب", icon: <IconUsers />, path: "/dashboard/students", role: ["PROFESSOR", "ADMIN"] },
         { text: "الأقسام", icon: <IconSchool />, path: "/dashboard/departments", role: ["ADMIN"] },
         { text: "التقارير", icon: <IconChartBar />, path: "/dashboard/reports", role: ["ADMIN"] },
-        { text: "المحادثات", icon: <IconMessage />, path: "/dashboard/messages", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
-        { text: "مشاريع التخرج", icon: <IconCertificate />, path: "/dashboard/graduation", role: ["ADMIN"] },
+        // { text: "المحادثات", icon: <IconMessage />, path: "/dashboard/messages", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
+        { text: "مشاريع التخرج", icon: <IconCertificate />, path: "/dashboard/graduation", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
     ];
 
     const drawer = (

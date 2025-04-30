@@ -113,21 +113,21 @@ export default function HomePage() {
     <>
       <AppBar position="fixed" sx={{ backgroundColor: "white", color: "black" }}>
         <Toolbar>
-          <Box sx={{ flexGrow: 1, display: "flex", gap: 2 }}>
+          <Box sx={{ flexGrow: 1, display: "flex", gap: 4  }}>
             <Link href="#home" color="inherit" underline="none">
-              <Button startIcon={<IconHome />}>الرئيسية</Button>
+              <Button startIcon={<IconHome />} sx={{ gap: 1 }}>الرئيسية</Button>
             </Link>
             <Link href="#about" color="inherit" underline="none">
-              <Button startIcon={<IconInfoCircle />}>عن النظام</Button>
+              <Button startIcon={<IconInfoCircle />} sx={{ gap: 1 }}>عن النظام</Button>
             </Link>
             <Link href="#features" color="inherit" underline="none">
-              <Button startIcon={<IconChartBar />}>المميزات</Button>
+              <Button startIcon={<IconChartBar />} sx={{ gap: 1 }}>المميزات</Button>
             </Link>
             <Link href="#team" color="inherit" underline="none">
-              <Button startIcon={<IconUsersGroup />}>فريق العمل</Button>
+              <Button startIcon={<IconUsersGroup />} sx={{ gap: 1 }}>فريق العمل</Button>
             </Link>
             <Link href="#contact" color="inherit" underline="none">
-              <Button startIcon={<IconMail />}>اتصل بنا</Button>
+              <Button startIcon={<IconMail />} sx={{ gap: 1 }}>اتصل بنا</Button>
             </Link>
           </Box>
         </Toolbar>
