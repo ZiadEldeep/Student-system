@@ -27,6 +27,7 @@ import {
     FormControl,
     InputLabel,
     Autocomplete,
+    Skeleton,
 } from "@mui/material";
 import {
     IconEdit,
@@ -34,6 +35,7 @@ import {
     IconPlus,
     IconSearch,
     IconUserPlus,
+    IconEye,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -159,8 +161,8 @@ export default function CoursesPage() {
         e.preventDefault();
         try {
             console.log(formData)
-            const response = await fetch('/api/courses', {
-                method: 'POST',
+            const response = await fetch(`/api/courses/${selectedCourse?.id}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -212,7 +214,7 @@ export default function CoursesPage() {
 
 
     if (status === "loading") {
-        return <div>جاري التحميل...</div>;
+        return <Skeleton variant="rectangular" height={100} />;
     }
 
     return (
@@ -281,6 +283,12 @@ export default function CoursesPage() {
                                 <TableCell>{course.credits}</TableCell>
                                 <TableCell>{course.enrollments.length}</TableCell>
                                 <TableCell>
+                                    <IconButton
+                                        color="primary"
+                                        onClick={() => router.push(`/dashboard/courses/${course.id}`)}
+                                    >
+                                        <IconEye />
+                                    </IconButton>
                                     <IconButton
                                         color="primary"
                                         onClick={() => handleOpenDialog(course)}

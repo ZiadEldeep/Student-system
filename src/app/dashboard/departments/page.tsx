@@ -21,6 +21,7 @@ import {
     DialogContent,
     DialogActions,
     TextField,
+    Skeleton,
 } from "@mui/material";
 import {
     IconEdit,
@@ -133,7 +134,7 @@ export default function DepartmentsPage() {
     );
 
     if (status === "loading") {
-        return <div>جاري التحميل...</div>;
+        return <Skeleton variant="rectangular" height={100} />;
     }
 
     return (

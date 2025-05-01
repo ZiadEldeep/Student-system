@@ -25,6 +25,7 @@ import {
     Grid,
     Select,
     MenuItem,
+    Skeleton,
 } from "@mui/material";
 import {
     IconEdit,
@@ -162,7 +163,7 @@ export default function StudentsPage() {
     );
 
     if (status === "loading") {
-        return <div>جاري التحميل...</div>;
+        return <Skeleton variant="rectangular" height={100} />;
     }
     if (session?.user?.role !== "PROFESSOR" as UserRole) {
         return notFound();
