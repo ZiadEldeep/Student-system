@@ -45,22 +45,27 @@ export async function POST(request: Request) {
     try {
         const body = await request.json()
         console.log(body)
+        const department = await prisma.department.findUnique({
+            where: {
+                id: body.departmentId,
+            },
+        })
+        const professor = await prisma.user.findUnique({
+            where: {
+                id: body.professorId,
+            },
+        })
+        if (!department || !professor) {
+            return NextResponse.json({ error: 'القسم أو الأستاذ غير موجود' }, { status: 404 })
+        }
         const course = await prisma.course.create({
             data: {
                 name: body.name,
                 code: body.code,
                 description: body.description,
                 credits: parseInt(body.credits),
-                department: {
-                    connect: {
-                        id: body.departmentId,
-                    },
-                },
-                professor: {
-                    connect: {
-                        id: body.professorId,
-                    },
-                },
+                departmentId: department.id,
+                professorId: professor.id,
             },
         })
         return NextResponse.json(course)

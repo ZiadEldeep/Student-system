@@ -120,7 +120,7 @@ export async function PUT(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -129,7 +129,7 @@ export async function DELETE(
         }
 
         const project = await prisma.graduationProject.findUnique({
-            where: { id: params.id }
+            where: { id: (await params).id }
         });
 
         if (!project) {
@@ -150,7 +150,7 @@ export async function DELETE(
         }
 
         await prisma.graduationProject.delete({
-            where: { id: params.id }
+            where: { id: (await params).id }
         });
 
         return new NextResponse('Project deleted successfully', { status: 200 });

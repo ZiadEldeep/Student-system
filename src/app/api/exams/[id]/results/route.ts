@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/auth'
 // POST /api/exams/[id]/results
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions)
@@ -19,7 +19,7 @@ export async function POST(
         // التحقق من أن المستخدم هو الدكتور المسؤول عن الامتحان أو الإداري
         const exam = await prisma.exam.findUnique({
             where: {
-                id: params.id,
+                id: (await params).id,
             },
             select: {
                 professorId: true,
@@ -54,7 +54,7 @@ export async function POST(
             data: {
                 score: score,
                 studentId: student.id,
-                examId: params.id,
+                examId: (await params).id,
             },
             include: {
                 student: {

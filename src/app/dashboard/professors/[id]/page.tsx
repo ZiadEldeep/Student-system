@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -97,7 +97,7 @@ interface GraduationProject {
     };
 }
 
-export default function ProfessorProfilePage({ params }: { params: { id: string } }) {
+export default function ProfessorProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [professor, setProfessor] = useState<Professor | null>(null);
@@ -105,18 +105,18 @@ export default function ProfessorProfilePage({ params }: { params: { id: string 
     const [tabValue, setTabValue] = useState(0);
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
     const [loading, setLoading] = useState(true);
-
+    const { id } = use(params);
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/login");
         }
         fetchProfessor();
         fetchDepartments();
-    }, [status, router, params.id]);
+    }, [status, router, id]);
 
     const fetchProfessor = async () => {
         try {
-            const response = await fetch(`/api/professors/${params.id}`);
+            const response = await fetch(`/api/professors/${id}`);
             const data = await response.json();
             setProfessor(data);
         } catch (error) {
@@ -146,7 +146,7 @@ export default function ProfessorProfilePage({ params }: { params: { id: string 
 
     const handleSaveProfile = async () => {
         try {
-            const response = await fetch(`/api/professors/${params.id}`, {
+            const response = await fetch(`/api/professors/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

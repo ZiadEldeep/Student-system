@@ -161,26 +161,49 @@ export default function CoursesPage() {
         e.preventDefault();
         try {
             console.log(formData)
-            const response = await fetch(`/api/courses/${selectedCourse?.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: formData.name,
-                    code: formData.code,
-                    description: formData.description,
-                    credits: formData.credits,
-                    departmentId: formData.departmentId,
-                    professorId: formData.professorId,
-                }),
-            });
+            if (selectedCourse?.id) {
+                const response = await fetch(`/api/courses/${selectedCourse?.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: formData.name,
+                        code: formData.code,
+                        description: formData.description,
+                        credits: formData.credits,
+                        departmentId: formData.departmentId,
+                        professorId: formData.professorId,
+                    }),
+                });
+                if (response.ok) {
+                    handleCloseDialog();
+                    fetchCourses();
+                } else {
+                    console.error('Error updating course');
+                }
 
-            if (response.ok) {
-                handleCloseDialog();
-                fetchCourses();
             } else {
-                console.error('Error adding course');
+                const response = await fetch('/api/courses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: formData.name,
+                        code: formData.code,
+                        description: formData.description,
+                        credits: formData.credits,
+                        departmentId: formData.departmentId,
+                        professorId: formData.professorId,
+                    }),
+                });
+                if (response.ok) {
+                    handleCloseDialog();
+                    fetchCourses();
+                } else {
+                    console.error('Error adding course');
+                }
             }
         } catch (error) {
             console.error('Error:', error);
@@ -263,8 +286,8 @@ export default function CoursesPage() {
                             <TableCell>الكود</TableCell>
                             <TableCell>القسم</TableCell>
                             <TableCell>الأستاذ</TableCell>
-                            <TableCell>الطلاب المسجلين</TableCell>
                             <TableCell>الساعات المعتمدة</TableCell>
+                            <TableCell>الطلاب المسجلين</TableCell>
                             <TableCell>الإجراءات</TableCell>
                         </TableRow>
                     </TableHead>
@@ -450,7 +473,7 @@ export default function CoursesPage() {
                         <Autocomplete
                             multiple
                             options={students}
-                            defaultValue={students.filter((student: any) => selectedCourse?.enrollments.map((enrollment: any) => enrollment?.studentId).includes(student.id))}
+                            defaultValue={students.filter((student: any) => selectedCourse?.enrollments?.map((enrollment: any) => enrollment?.studentId).includes(student.id))}
                             getOptionLabel={(option) => option.name}
                             renderInput={(params) => <TextField {...params} label="طلاب" />}
                             onChange={(event, value) => setSelectedStudents(value)}

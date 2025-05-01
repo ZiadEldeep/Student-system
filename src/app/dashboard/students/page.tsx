@@ -117,24 +117,47 @@ export default function StudentsPage() {
 
     const handleSaveStudent = async () => {
         try {
-            const response = await fetch('/api/students', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: selectedStudent?.name,
-                    email: selectedStudent?.email,
-                    password: selectedStudent?.password,
-                    departmentId: selectedStudent?.department.id,
-                }),
-            });
+            if (selectedStudent?.id) {
+                const response = await fetch(`/api/students/${selectedStudent.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: selectedStudent?.name,
+                        email: selectedStudent?.email,
+                        password: selectedStudent?.password,
+                        departmentId: selectedStudent?.department.id,
+                    }),
+                });
 
-            if (response.ok) {
-                handleCloseDialog();
-                fetchStudents();
-            } else {
-                console.error('Error saving student');
+                if (response.ok) {
+                    handleCloseDialog();
+                    fetchStudents();
+                } else {
+                    console.error('Error saving student');
+                }
+            }
+            else {
+                const response = await fetch('/api/students', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: selectedStudent?.name,
+                        email: selectedStudent?.email,
+                        password: selectedStudent?.password,
+                        departmentId: selectedStudent?.department.id,
+                    }),
+                });
+
+                if (response.ok) {
+                    handleCloseDialog();
+                    fetchStudents();
+                } else {
+                    console.error('Error saving student');
+                }
             }
         } catch (error) {
             console.error('Error:', error);
@@ -214,7 +237,7 @@ export default function StudentsPage() {
                             <TableCell>الاسم</TableCell>
                             <TableCell>البريد الإلكتروني</TableCell>
                             <TableCell>القسم</TableCell>
-                            <TableCell>الحالة</TableCell>
+                            {/* <TableCell>الحالة</TableCell> */}
                             <TableCell>الإجراءات</TableCell>
                         </TableRow>
                     </TableHead>
@@ -229,7 +252,7 @@ export default function StudentsPage() {
                                 <TableCell>{student.name}</TableCell>
                                 <TableCell>{student.email}</TableCell>
                                 <TableCell>{student.department?.name}</TableCell>
-                                <TableCell>{student.status}</TableCell>
+                                {/* <TableCell>{student.status}</TableCell> */}
                                 <TableCell>
                                     <IconButton
                                         color="primary"

@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/auth'
 // PUT /api/exams/[id]/results/[resultId]
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string; resultId: string } }
+    { params }: { params: Promise<{ id: string; resultId: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions)
@@ -19,7 +19,7 @@ export async function PUT(
         // التحقق من أن المستخدم هو الدكتور المسؤول عن الامتحان أو الإداري
         const exam = await prisma.exam.findUnique({
             where: {
-                id: params.id,
+                id: (await params).id,
             },
             select: {
                 professorId: true,
@@ -52,7 +52,7 @@ export async function PUT(
             where: {
                 studentId_courseId: {
                     studentId: studentId,
-                    courseId: params.id,
+                    courseId: (await params).id,
                 },
             },
             data: {
@@ -68,7 +68,7 @@ export async function PUT(
 
         const result = await prisma.examResult.update({
             where: {
-                id: params.resultId,
+                id: (await params).resultId,
             },
             data: {
                 score: score,

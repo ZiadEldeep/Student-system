@@ -4,12 +4,12 @@ import { prisma } from '@/lib/prisma'
 // GET /api/courses/[id]
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const course = await prisma.course.findUnique({
             where: {
-                id: params.id,
+                id: (await params).id,
             },
             include: {
                 department: {
@@ -57,13 +57,13 @@ export async function GET(
 // PUT /api/courses/[id]
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const body = await request.json()
         const course = await prisma.course.update({
             where: {
-                id: params.id,
+                id: (await params).id,
             },
             data: {
                 name: body.name,
@@ -83,12 +83,12 @@ export async function PUT(
 // DELETE /api/courses/[id]
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         await prisma.course.delete({
             where: {
-                id: params.id,
+                id: (await params).id,
             },
         })
         return NextResponse.json({ message: 'تم حذف المادة بنجاح' })

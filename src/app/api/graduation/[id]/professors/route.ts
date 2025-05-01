@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { Prisma, ProfessorProjectStatus } from '@prisma/client';
 export async function POST(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -21,7 +21,7 @@ export async function POST(
         }
 
         const project = await prisma.graduationProject.findUnique({
-            where: { id: params.id },
+            where: { id: (await params).id },
             include: {
                 professor: true
             }
@@ -39,7 +39,7 @@ export async function POST(
 
         // Add professor to project
         const updatedProject = await prisma.graduationProject.update({
-            where: { id: params.id },
+            where: { id: (await params).id },
             data: {
                 professor: {
                     create: {
@@ -66,7 +66,7 @@ export async function POST(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -82,7 +82,7 @@ export async function DELETE(
         }
 
         const project = await prisma.graduationProject.findUnique({
-            where: { id: params.id },
+            where: { id: (await params).id },
             include: {
                 members: true
             }
@@ -112,7 +112,7 @@ export async function DELETE(
 
         await prisma.graduationProjectMember.deleteMany({
             where: {
-                graduationProjectId: params.id,
+                graduationProjectId: (await params).id,
                 userId: userId
             }
         });

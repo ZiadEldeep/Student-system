@@ -4,12 +4,12 @@ import { prisma } from '@/lib/prisma'
 // GET /api/professors/[id]
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const professor = await prisma.user.findUnique({
             where: {
-                id: params.id,
+                id: (await params).id,
                 role: 'PROFESSOR',
             },
             include: {
@@ -34,7 +34,7 @@ export async function GET(
                 },
                 GraduationProject: {
                     include: {
-                        student: true,
+                        members: true,
                     },
                 },
             },
@@ -53,13 +53,13 @@ export async function GET(
 // PUT /api/professors/[id]
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const body = await request.json()
         const professor = await prisma.user.update({
             where: {
-                id: params.id,
+                id: (await params).id,
                 role: 'PROFESSOR',
             },
             data: {
@@ -77,12 +77,12 @@ export async function PUT(
 // DELETE /api/professors/[id]
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         await prisma.user.delete({
             where: {
-                id: params.id,
+                id: (await params).id,
                 role: 'PROFESSOR',
             },
         })
