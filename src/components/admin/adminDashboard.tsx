@@ -36,7 +36,8 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Avatar
+    Avatar,
+    Autocomplete
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
@@ -51,56 +52,55 @@ import { motion } from "framer-motion";
 import { IconBook } from "@tabler/icons-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+
 type CourseWithEnrollments = Course & { enrollments: (Enrollment & { student: User })[] };
 type ExamWithCourseId = Exam & { courseId: string };
 
-const fetchCourses = async (professorId: string): Promise<CourseWithEnrollments[]> => {
-    const response = await axios.get(`/api/courses?professorId=${professorId}`);
+const fetchCourses = async (adminId: string): Promise<CourseWithEnrollments[]> => {
+    const response = await axios.get(`/api/courses?adminId=${adminId}`);
     return response.data;
 };
 
-const fetchExams = async (courseIds: string[], professorId: string): Promise<ExamWithCourseId[]> => {
-    const response = await axios.get(`/api/exams?courseIds=${courseIds.join(",")}&professorId=${professorId}`);
-    return response.data;
-};
-const fetchTables = async (professorId: string): Promise<TableModel[]> => {
-    const response = await axios.get(`/api/tables?professorId=${professorId}`);
+const fetchExams = async (courseIds: string[], adminId: string): Promise<ExamWithCourseId[]> => {
+    const response = await axios.get(`/api/exams?courseIds=${courseIds.join(",")}&adminId=${adminId}`);
     return response.data;
 };
 
-export default function ProfessorDashboard({ professorId }: { professorId: string }) {
-    const [openExamDialog, setOpenExamDialog] = useState(false);
-    const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-    const [examData, setExamData] = useState({
-        title: "",
-        description: "",
-        duration: 60,
-        type: "QUIZ",
-        questions: [] as Array<{
-            question: string;
-            options: string[];
-            correctAnswer: number;
-        }>,
-        startTime: "",
-        endTime: ""
-    });
+const fetchTables = async (adminId: string): Promise<TableModel[]> => {
+    const response = await axios.get(`/api/tables?adminId=${adminId}`);
+    return response.data;
+};
+
+export default function AdminDashboard({ adminId }: { adminId: string }) {
+    const router = useRouter();
     const [open, setOpen] = useState(false);
-    const [tableData, setTableData] = useState({
+    let [tableData, setTableData] = useState({
         name: "",
         url: "",
-        type: "EXAM",
+        type: "",
         examId: ""
     });
-    const router = useRouter();
+
     const {
         data: courses,
         isLoading: isCoursesLoading,
         isError: isCoursesError,
         error: coursesError
     } = useQuery({
-        queryKey: ["courses", professorId],
-        queryFn: () => fetchCourses(professorId)
+        queryKey: ["courses", adminId],
+        queryFn: () => fetchCourses(adminId)
     });
+    const {
+        data: tables,
+        isLoading: isTablesLoading,
+        isError: isTablesError,
+        error: tablesError,
+        refetch: refetchTables
+    } = useQuery({
+        queryKey: ["tables", adminId],
+        queryFn: () => fetchTables(adminId)
+    });
+
 
     const {
         data: exams,
@@ -109,51 +109,11 @@ export default function ProfessorDashboard({ professorId }: { professorId: strin
         refetch: refetchExams,
         error: examsError
     } = useQuery({
-        queryKey: ["exams", professorId, courses?.map(c => c.id)],
+        queryKey: ["exams", adminId, courses?.map(c => c.id)],
         enabled: !!courses?.length,
-        queryFn: () => fetchExams(courses!.map(c => c.id), professorId)
-    });
-    const {
-        data: tables,
-        isLoading: isTablesLoading,
-        isError: isTablesError,
-        refetch: refetchTables,
-        error: tablesError
-    } = useQuery({
-        queryKey: ["tables", professorId],
-        queryFn: () => fetchTables(professorId)
+        queryFn: () => fetchExams(courses!.map(c => c.id), adminId)
     });
 
-    const handleAddExam = (courseId: string) => {
-        setSelectedCourse(courseId);
-        setOpenExamDialog(true);
-    };
-    const handleClose = () => {
-        setOpen(false);
-    };
-    const handleCreate = async () => {
-        try {
-            await axios.post('/api/tables', { name: tableData.name, url: tableData.url, type: tableData.type, examId: tableData.examId });
-            refetchTables();
-        } catch (error) {
-            console.error("حدث خطأ في إنشاء الجدول:", error);
-        }
-        setOpen(false);
-    };
-
-    const handleCloseExamDialog = () => {
-        setOpenExamDialog(false);
-        setSelectedCourse(null);
-        setExamData({
-            title: "",
-            description: "",
-            duration: 60,
-            type: "QUIZ",
-            startTime: "",
-            endTime: "",
-            questions: []
-        });
-    };
     const handleViewStatistics = (courseId: string) => {
         // router.push(`/professors/statistics?courseId=${courseId}`);
     };
@@ -169,38 +129,23 @@ export default function ProfessorDashboard({ professorId }: { professorId: strin
             console.error("حدث خطأ في حذف الامتحان:", error);
         }
     };
+    const handleClose = () => {
+        setOpen(false);
+    };
+    const handleCreate = async () => {
+        try {
+            await axios.post('/api/tables', { name: tableData.name, url: tableData.url, type: tableData.type, examId: tableData.examId });
+            refetchTables();
+        } catch (error) {
+            console.error("حدث خطأ في إنشاء الجدول:", error);
+        }
+        setOpen(false);
+
+    };
     const handleViewExam = (examId: string) => {
         router.push(`/dashboard/exams/${examId}`);
     };
-    const handleAddQuestion = () => {
-        setExamData(prev => ({
-            ...prev,
-            questions: [
-                ...prev.questions,
-                {
-                    question: "",
-                    options: ["", "", "", ""],
-                    correctAnswer: 0
-                }
-            ]
-        }));
-    };
 
-    const handleSubmitExam = async () => {
-        if (!selectedCourse) return;
-
-        try {
-            await axios.post("/api/exams", {
-                courseId: selectedCourse,
-                professorId: professorId,
-                ...examData
-            });
-            handleCloseExamDialog();
-            refetchExams();
-        } catch (error) {
-            console.error("حدث خطأ في إنشاء الامتحان:", error);
-        }
-    };
 
     if (isCoursesLoading) {
         return <Skeleton variant="rectangular" height={400} />;
@@ -215,6 +160,24 @@ export default function ProfessorDashboard({ professorId }: { professorId: strin
             {/* <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
                 Professor Dashboard
             </Typography> */}
+            <Box sx={{ mb: 4 }}>
+                <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
+                    إنشاء جدول
+                </Button>
+                <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                    {tables?.map(table => (
+                        <Box key={table.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center', padding: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center' }}>
+                                <Chip label={table.type === "EXAM" ? "امتحان" : table.type === "GRADUATION_PROJECT" ? "مشروع تخرج" : "جدول عام"} variant="outlined" size="small" />
+                                <Typography variant="body2">{table.name}</Typography>
+                            </Box>
+                            <Button variant="contained" color="primary" onClick={() => window.open(table.url, '_blank')}>
+                                عرض
+                            </Button>
+                        </Box>
+                    ))}
+                </Stack>
+            </Box>
 
             <Grid container spacing={3}>
                 {courses?.map(course => (
@@ -229,18 +192,13 @@ export default function ProfessorDashboard({ professorId }: { professorId: strin
                                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                                         {course.name}
                                     </Typography>
-                                    <Stack direction="row" spacing={1}>
+                                    {/* <Stack direction="row" spacing={1}>
                                         <Tooltip title="View Statistics">
                                             <IconButton onClick={() => handleViewStatistics(course.id)} size="small">
                                                 <AssessmentIcon />
                                             </IconButton>
                                         </Tooltip>
-                                        <Tooltip title="Add MCQ Exam">
-                                            <IconButton onClick={() => handleAddExam(course.id)} size="small">
-                                                <UploadIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </Stack>
+                                    </Stack> */}
                                 </Box>
 
                                 <Stack direction="row" spacing={5} sx={{ mb: 2 }}>
@@ -376,172 +334,31 @@ export default function ProfessorDashboard({ professorId }: { professorId: strin
                         </motion.div>
                     </Grid>
                 ))}
+
             </Grid>
-
-            <Dialog open={openExamDialog} onClose={handleCloseExamDialog} maxWidth="md" fullWidth>
-                <DialogTitle>اضافة امتحان</DialogTitle>
-                <DialogContent>
-                    <Stack spacing={3} sx={{ mt: 2 }}>
-                        <TextField
-                            label="عنوان الامتحان"
-                            fullWidth
-                            value={examData.title}
-                            onChange={(e) => setExamData(prev => ({ ...prev, title: e.target.value }))}
-                        />
-                        <TextField
-                            label="وصف الامتحان"
-                            fullWidth
-                            value={examData.description}
-                            onChange={(e) => setExamData(prev => ({ ...prev, description: e.target.value }))}
-                        />
-                        <FormControl fullWidth>
-                            <InputLabel>نوع الامتحان</InputLabel>
-                            <Select
-                                label="نوع الامتحان"
-                                value={examData.type}
-                                onChange={(e) => setExamData(prev => ({ ...prev, type: e.target.value as string }))}
-                            >
-                                <MenuItem value="QUIZ">QUIZ</MenuItem>
-                                <MenuItem value="FINAL">FINAL</MenuItem>
-                            </Select>
-
-                        </FormControl>
-                        {/* <FormControl fullWidth>
-                            <InputLabel>المادة</InputLabel>
-                            <Select
-                                value={selectedCourse}
-                                label="المادة"
-                                onChange={(e) => setSelectedCourse(e.target.value as string)}
-                            >
-                                {courses?.map(course => (
-                                    <MenuItem key={course.id} value={course.id}>{course.name}</MenuItem>
-                                ))}
-                            </Select>
-
-                        </FormControl> */}
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <InputLabel>موعد البدء</InputLabel>
-                                    <FormControl fullWidth>
-                                        <TextField
-                                            type="datetime-local"
-                                            value={examData.startTime}
-                                            onChange={(e) => setExamData(prev => ({ ...prev, startTime: e.target.value }))}
-                                        />
-                                    </FormControl>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <InputLabel>موعد الانتهاء</InputLabel>
-                                    <FormControl fullWidth>
-                                        <TextField
-                                            type="datetime-local"
-                                            value={examData.endTime}
-                                            onChange={(e) => setExamData(prev => ({ ...prev, endTime: e.target.value }))}
-                                        />
-                                    </FormControl>
-                                </Grid>
-                            </Grid>
-                        </Box>
-
-                        <FormControl fullWidth>
-                            <InputLabel>المدة (دقائق)</InputLabel>
-                            <Select
-                                value={examData.duration}
-                                label="المدة (دقائق)"
-                                onChange={(e) => setExamData(prev => ({ ...prev, duration: e.target.value as number }))}
-                            >
-                                <MenuItem value={30}>30 دقيقة</MenuItem>
-                                <MenuItem value={60}>60 دقيقة</MenuItem>
-                                <MenuItem value={90}>90 دقيقة</MenuItem>
-                                <MenuItem value={120}>120 دقيقة</MenuItem>
-                            </Select>
-                        </FormControl>
-
-                        {examData.questions.map((question, index) => (
-                            <Paper key={index} sx={{ p: 2 }}>
-                                <Typography variant="subtitle2" gutterBottom>
-                                    السؤال {index + 1}
-                                </Typography>
-                                <TextField
-                                    label="السؤال"
-                                    fullWidth
-                                    value={question.question}
-                                    onChange={(e) => {
-                                        const newQuestions = [...examData.questions];
-                                        newQuestions[index].question = e.target.value;
-                                        setExamData(prev => ({ ...prev, questions: newQuestions }));
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
-                                {question.options.map((option, optionIndex) => (
-                                    <TextField
-                                        key={optionIndex}
-                                        label={`الاختيار ${optionIndex + 1}`}
-                                        fullWidth
-                                        value={option}
-                                        onChange={(e) => {
-                                            const newQuestions = [...examData.questions];
-                                            newQuestions[index].options[optionIndex] = e.target.value;
-                                            setExamData(prev => ({ ...prev, questions: newQuestions }));
-                                        }}
-                                        sx={{ mb: 1 }}
-                                    />
-                                ))}
-                                <FormControl fullWidth sx={{ mt: 2 }}>
-                                    <InputLabel>الاجابة الصحيحة</InputLabel>
-                                    <Select
-                                        value={question.correctAnswer}
-                                        label="الاجابة الصحيحة"
-                                        onChange={(e) => {
-                                            const newQuestions = [...examData.questions];
-                                            newQuestions[index].correctAnswer = e.target.value as number;
-                                            setExamData(prev => ({ ...prev, questions: newQuestions }));
-                                        }}
-                                    >
-                                        {question.options.map((_, i) => (
-                                            <MenuItem key={i} value={i}>الاختيار {i + 1}</MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Paper>
-                        ))}
-
-                        {/* <Button
-                            variant="outlined"
-                            startIcon={<AddIcon />}
-                            onClick={handleAddQuestion}
-                        >
-                            اضافة اسأله
-                        </Button> */}
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseExamDialog}>الغاء</Button>
-                    <Button onClick={handleSubmitExam} variant="contained" color="primary">
-                        اضافة
-                    </Button>
-                </DialogActions>
-            </Dialog>
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>إنشاء جدول</DialogTitle>
-                <DialogContent>
-                    <TextField label="الاسم" fullWidth value={tableData.name} onChange={(e) => setTableData({ ...tableData, name: e.target.value })} />
-                    <TextField label="الرابط" fullWidth value={tableData.url} onChange={(e) => setTableData({ ...tableData, url: e.target.value })} />
-                    <FormControl fullWidth>
-                        <InputLabel>النوع</InputLabel>
-                        <Select label="النوع" value={tableData.type} onChange={(e) => setTableData({ ...tableData, type: e.target.value })}>
-                            <MenuItem value="EXAM">امتحان</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>الامتحان</InputLabel>
-                        <Select label="الامتحان" value={tableData.examId} onChange={(e) => setTableData({ ...tableData, examId: e.target.value })}>
-                            {exams?.map(exam => (
-                                <MenuItem key={exam.id} value={exam.id}>{exam.title}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
+                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 5 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: "500px" }}>
+                        <TextField label="الاسم" fullWidth value={tableData.name} onChange={(e) => setTableData({ ...tableData, name: e.target.value })} />
+                        <TextField label="الرابط" fullWidth value={tableData.url} onChange={(e) => setTableData({ ...tableData, url: e.target.value })} />
+                        <FormControl fullWidth>
+                            <InputLabel>النوع</InputLabel>
+                            <Select label="النوع" value={tableData.type} onChange={(e) => setTableData({ ...tableData, type: e.target.value })}>
+                                <MenuItem value="EXAM">جدول امتحان</MenuItem>
+                                <MenuItem value="GRADUATION_PROJECT">جدول مشروع تخرج</MenuItem>
+                                <MenuItem value="GENERATE_TABLE">جدول عام</MenuItem>
+                            </Select>
+                        </FormControl>
+                        {tableData.type === "EXAM" && (<Autocomplete
+                            options={exams || []}
+                            fullWidth
+                            getOptionLabel={(option) => option.title}
+                            onChange={(e, value) => setTableData({ ...tableData, examId: value?.id || "" })}
+                            renderInput={(params) => <TextField {...params} label="الامتحان" />}
+                        />
+                        )}
+                    </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>إلغاء</Button>

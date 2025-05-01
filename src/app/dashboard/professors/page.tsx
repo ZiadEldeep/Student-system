@@ -49,6 +49,7 @@ export default function ProfessorsPage() {
     const router = useRouter();
     const [professors, setProfessors] = useState<Professor[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
@@ -221,7 +222,7 @@ export default function ProfessorsPage() {
                             >
                                 <TableCell>{professor.name}</TableCell>
                                 <TableCell>{professor.email}</TableCell>
-                                <TableCell>{professor.department.name}</TableCell>
+                                <TableCell>{professor.department?.name}</TableCell>
                                 <TableCell>
                                     <IconButton
                                         color="primary"
@@ -231,7 +232,10 @@ export default function ProfessorsPage() {
                                     </IconButton>
                                     <IconButton
                                         color="error"
-                                        onClick={() => handleDeleteProfessor(professor.id)}
+                                        onClick={() => {
+                                            setSelectedProfessor(professor)
+                                            setOpenDeleteDialog(true)
+                                        }}
                                     >
                                         <IconTrash />
                                     </IconButton>
@@ -288,7 +292,7 @@ export default function ProfessorsPage() {
                         <Select
                             fullWidth
                             label="القسم"
-                            value={selectedProfessor?.department.id || ""}
+                            value={selectedProfessor?.department?.id || ""}
                             onChange={(e) =>
                                 setSelectedProfessor({
                                     ...selectedProfessor!,
@@ -311,6 +315,22 @@ export default function ProfessorsPage() {
                     <Button onClick={handleCloseDialog}>إلغاء</Button>
                     <Button onClick={handleSaveProfessor} variant="contained">
                         حفظ
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+                <DialogTitle>
+                    حذف الأستاذ
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        هل أنت متأكد من رغبتك في حذف الأستاذ {selectedProfessor?.name}؟
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDeleteDialog(false)}>إلغاء</Button>
+                    <Button onClick={() => handleDeleteProfessor(selectedProfessor?.id || '')} variant="contained">
+                        حذف
                     </Button>
                 </DialogActions>
             </Dialog>

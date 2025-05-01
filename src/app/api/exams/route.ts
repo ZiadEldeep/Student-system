@@ -21,6 +21,13 @@ export async function GET(request: Request) {
         }
         const exams = await prisma.exam.findMany({
             where,
+            include: {
+                results: {
+                    include: {
+                        student: true,
+                    },
+                },
+            },
         });
         return NextResponse.json(exams);
     } catch (error) {

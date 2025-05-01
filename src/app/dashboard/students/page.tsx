@@ -62,7 +62,7 @@ export default function StudentsPage() {
         if (status === "unauthenticated") {
             router.push("/login");
         }
-        fetchStudents(session?.user?.id);
+        fetchStudents(session?.user?.role === "PROFESSOR" as UserRole ? session?.user?.id : undefined);
         fetchDepartments();
     }, [status, router]);
 
@@ -165,7 +165,7 @@ export default function StudentsPage() {
     if (status === "loading") {
         return <Skeleton variant="rectangular" height={100} />;
     }
-    if (session?.user?.role !== "PROFESSOR" as UserRole) {
+    if (session?.user?.role === "STUDENT" as UserRole) {
         return notFound();
     }
 

@@ -39,6 +39,10 @@ model User {
     Message           Message[]
     // students          StudentsProfessor[] @relation("Student")
     // professors        StudentsProfessor[] @relation("Professor")
+
+    GraduationProjectMember GraduationProjectMember[]
+
+    ProfessorProject ProfessorProject[]
 }
 
 // model StudentsProfessor {
@@ -59,6 +63,8 @@ model Department {
     // Relations
     users   User[]
     courses Course[]
+
+    GraduationProject GraduationProject[]
 }
 
 model Course {
@@ -115,6 +121,8 @@ model Exam {
     professor   User         @relation(fields: [professorId], references: [id], onDelete: Cascade)
     professorId String       @db.ObjectId
     results     ExamResult[]
+
+    Table Table[]
 }
 
 model ExamResult {
@@ -147,14 +155,74 @@ model Message {
 }
 
 model GraduationProject {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    id          String        @id @default(auto()) @map("_id") @db.ObjectId
     title       String
     description String
-    status      String   @default("AVAILABLE")
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    status      ProjectStatus @default(PENDING)
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    notes       String?
+    grade       Float?
 
     // Relations
-    student   User?   @relation(fields: [studentId], references: [id])
-    studentId String? @db.ObjectId
+    leader       User?              @relation(fields: [leaderId], references: [id])
+    leaderId     String?            @db.ObjectId
+    professor    ProfessorProject[]
+    department   Department?        @relation(fields: [departmentId], references: [id])
+    departmentId String?            @db.ObjectId
+
+    members GraduationProjectMember[]
+}
+
+enum ProjectStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+model ProfessorProject {
+    id          String                 @id @default(auto()) @map("_id") @db.ObjectId
+    professor   User?                  @relation(fields: [professorId], references: [id])
+    professorId String?                @db.ObjectId
+    project     GraduationProject?     @relation(fields: [projectId], references: [id])
+    projectId   String?                @db.ObjectId
+    status      ProfessorProjectStatus @default(PENDING)
+    notes       String?
+}
+
+enum ProfessorProjectStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+model GraduationProjectMember {
+    id                  String            @id @default(auto()) @map("_id") @db.ObjectId
+    graduationProject   GraduationProject @relation(fields: [graduationProjectId], references: [id])
+    graduationProjectId String            @db.ObjectId
+    user                User              @relation(fields: [userId], references: [id])
+    userId              String            @db.ObjectId
+    role                ProjectRole       @default(MEMBER)
+}
+
+model Table {
+    id        String    @id @default(auto()) @map("_id") @db.ObjectId
+    name      String
+    url       String
+    type      TableType
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    exam      Exam?     @relation(fields: [examId], references: [id])
+    examId    String?   @db.ObjectId
+}
+
+enum TableType {
+    EXAM
+    GRADUATION_PROJECT
+    GENERATE_TABLE
+}
+
+enum ProjectRole {
+    LEADER
+    MEMBER
 }

@@ -1,318 +1,351 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
   Box,
-  Avatar,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
+  Typography,
+  Paper,
+  Grid,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+  CircularProgress,
+  Alert,
+  IconButton,
 } from '@mui/material';
 import {
-  Assessment as AssessmentIcon,
-  People as PeopleIcon,
-  Event as EventIcon,
-  Upload as UploadIcon,
-  ExpandMore as ExpandMoreIcon,
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Book as BookIcon,
+  Assessment as AssessmentIcon,
 } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/DashboardLayout';
-
+import axios from 'axios';
 type Project = {
-  id: number;
+  id: string;
   title: string;
-  supervisor: string;
-  department: string;
-  status: 'Approved' | 'Pending' | 'Rejected';
   description: string;
+  status: string;
+  notes?: string;
+  grade?: number;
+  leaderId: string;
+  members: {
+    id: string;
+    role: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  }[];
+  professor: {
+    id: string;
+    professor: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    status: string;
+    notes?: string;
+  }[];
 };
 
-const dummyProjects: Project[] = [
-  {
-    id: 1,
-    title: 'Smart Attendance System',
-    supervisor: 'Dr. Amina Khalil',
-    department: 'Computer Science',
-    status: 'Approved',
-    description: 'An automated attendance system using facial recognition technology to track student attendance in real-time.',
-  },
-  {
-    id: 2,
-    title: 'AI-based Chatbot',
-    supervisor: 'Prof. Mahmoud Salem',
-    department: 'Software Engineering',
-    status: 'Pending',
-    description: 'An intelligent chatbot system that can answer student queries and provide academic support 24/7.',
-  },
-  {
-    id: 3,
-    title: 'IoT Smart Farming',
-    supervisor: 'Eng. Lina Hossam',
-    department: 'Information Systems',
-    status: 'Rejected',
-    description: 'A smart farming solution using IoT sensors to monitor and optimize agricultural conditions.',
-  },
-];
-
 const Page = () => {
-  const [search, setSearch] = useState('');
-  const [projects, setProjects] = useState<Project[]>(dummyProjects);
-  const [showModal, setShowModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [formData, setFormData] = useState<Omit<Project, 'id'>>({
+  const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newProject, setNewProject] = useState({
     title: '',
-    supervisor: '',
-    department: '',
-    status: 'Pending',
     description: '',
   });
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRoleId, setUserRoleId] = useState<string | null>(null);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+    rejected: 0,
+  });
 
-  const filteredProjects = projects.filter((project) =>
-    project.title.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await axios.get('/api/graduation');
+        if (userRole === 'STUDENT' && response.data.some((p: Project) => p.leaderId === userRoleId)) {
+          let studentProjects = response.data.filter((p: Project) => p.leaderId === userRoleId);
+          let project = studentProjects[0];
+          setProjects([project]);
+        } else {
+          setProjects(response.data);
+        }
 
-  const handleStatusChange = (projectId: number, newStatus: 'Approved' | 'Pending' | 'Rejected') => {
-    setProjects(projects.map(project =>
-      project.id === projectId ? { ...project, status: newStatus } : project
-    ));
-  };
+        // Calculate statistics
+        if (userRole === 'STUDENT' && response.data.some((p: Project) => p.leaderId === userRoleId)) {
+          let studentProjects = [response.data.filter((p: Project) => p.leaderId === userRoleId)[0]];
+          setStatistics({
+            total: studentProjects.length,
+            approved: studentProjects.filter((p: Project) => p.status === 'APPROVED').length,
+            pending: studentProjects.filter((p: Project) => p.status === 'PENDING').length,
+            rejected: studentProjects.filter((p: Project) => p.status === 'REJECTED').length,
+          });
+        } else {
+          setStatistics({
+            total: response.data.length,
+            approved: response.data.filter((p: Project) => p.status === 'APPROVED').length,
+            pending: response.data.filter((p: Project) => p.status === 'PENDING').length,
+            rejected: response.data.filter((p: Project) => p.status === 'REJECTED').length,
+          });
+        }
+      } catch (err) {
+        setError('Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleEdit = (project: Project) => {
-    setEditingProject(project);
-    setFormData({
-      title: project.title,
-      supervisor: project.supervisor,
-      department: project.department,
-      status: project.status,
-      description: project.description,
-    });
-    setShowModal(true);
-  };
+    const fetchUserRole = async () => {
+      try {
+        const response = await fetch('/api/auth/session');
+        if (response.ok) {
+          const data = await response.json();
+          setUserRole(data.user?.role || null);
+          setUserRoleId(data.user?.id || null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user role:', err);
+      }
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingProject) {
-      setProjects(projects.map(project =>
-        project.id === editingProject.id
-          ? { ...project, ...formData }
-          : project
-      ));
-    } else {
-      const newProject: Project = {
-        id: projects.length + 1,
-        ...formData,
-      };
-      setProjects([...projects, newProject]);
+    if (userRoleId) {
+      fetchProjects();
     }
-    setShowModal(false);
-    setEditingProject(null);
-    setFormData({
-      title: '',
-      supervisor: '',
-      department: '',
-      status: 'Pending',
-      description: '',
-    });
+    fetchUserRole();
+  }, [userRoleId]);
+
+  const handleAddProject = async () => {
+    try {
+      const response = await fetch('/api/graduation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newProject),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create project');
+      }
+
+      const createdProject = await response.json();
+      setProjects([...projects, createdProject]);
+      setShowAddDialog(false);
+      setNewProject({
+        title: '',
+        description: '',
+      });
+    } catch (err) {
+      setError('Failed to create project');
+    }
   };
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!window.confirm('Are you sure you want to delete this project?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/graduation/${projectId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete project');
+      }
+
+      setProjects(projects.filter(project => project.id !== projectId));
+    } catch (err) {
+      setError('Failed to delete project');
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+          <CircularProgress />
+        </Box>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-100">
-        <AppBar position="static" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none' }}>
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Graduation Projects
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit">
-                <AssessmentIcon />
-              </IconButton>
-              <IconButton color="inherit">
-                <PeopleIcon />
-              </IconButton>
-              <IconButton color="inherit">
-                <EventIcon />
-              </IconButton>
-              <IconButton color="inherit">
-                <UploadIcon />
-              </IconButton>
-              <Avatar sx={{ bgcolor: 'primary.main' }}>A</Avatar>
-            </Box>
-          </Toolbar>
-        </AppBar>
-
-        <div className="p-6">
-          <div className="max-w-5xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-800">Graduation Projects</h1>
-              <button
-                onClick={() => setShowModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-              >
-                + Add Project
-              </button>
-            </div>
-
-            <input
-              type="text"
-              placeholder="Search projects..."
-              className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProjects.map((project) => (
-                <div
-                  key={project.id}
-                  className="bg-white rounded-xl shadow-md p-4 border border-gray-200"
+      <Box sx={{ p: 3 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+              <Typography variant="h4" component="h1">
+                مشاريع التخرج
+              </Typography>
+              {userRole === 'STUDENT' && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setShowAddDialog(true)}
                 >
-                  <h2 className="text-lg font-semibold text-gray-900">{project.title}</h2>
-                  <p className="text-sm text-gray-700">Supervisor: {project.supervisor}</p>
-                  <p className="text-sm text-gray-600">Department: {project.department}</p>
-                  <p className="text-sm text-gray-600 mt-2">{project.description}</p>
-                  <div className="mt-2 space-y-2">
-                    <span
-                      className={`inline-block px-3 py-1 text-sm rounded-full ${project.status === 'Approved'
-                        ? 'bg-green-100 text-green-700'
-                        : project.status === 'Pending'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
-                        }`}
-                    >
-                      {project.status}
-                    </span>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleStatusChange(project.id, 'Approved')}
-                        className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleStatusChange(project.id, 'Pending')}
-                        className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-200"
-                      >
-                        Pending
-                      </button>
-                      <button
-                        onClick={() => handleStatusChange(project.id, 'Rejected')}
-                        className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => handleEdit(project)}
-                      className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
-                    >
-                      Edit Project
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+                  إضافة مشروع جديد
+                </Button>
+              )}
+            </Box>
 
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg w-full max-w-md">
-              <h2 className="text-xl font-bold mb-4">
-                {editingProject ? 'Edit Project' : 'Add New Project'}
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Title</label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Supervisor</label>
-                  <input
-                    type="text"
-                    value={formData.supervisor}
-                    onChange={(e) => setFormData({ ...formData, supervisor: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Department</label>
-                  <input
-                    type="text"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    rows={3}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Approved' | 'Pending' | 'Rejected' })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            <Grid container spacing={3} mb={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="h6" color="text.secondary">
+                    إجمالي المشاريع
+                  </Typography>
+                  <Typography variant="h4">{statistics.total}</Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="h6" color="success.main">
+                    المشاريع المقبولة
+                  </Typography>
+                  <Typography variant="h4">{statistics.approved}</Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="h6" color="warning.main">
+                    المشاريع المعلقة
+                  </Typography>
+                  <Typography variant="h4">{statistics.pending}</Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="h6" color="error.main">
+                    المشاريع المرفوضة
+                  </Typography>
+                  <Typography variant="h4">{statistics.rejected}</Typography>
+                </Paper>
+              </Grid>
+            </Grid>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
+
+            <Grid container spacing={3}>
+              {projects.map((project, index) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <option value="Approved">Approved</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      setEditingProject(null);
-                      setFormData({
-                        title: '',
-                        supervisor: '',
-                        department: '',
-                        status: 'Pending',
-                        description: '',
-                      });
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                  >
-                    {editingProject ? 'Update' : 'Add'} Project
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
+                    <Card>
+                      <CardContent>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                          <Typography variant="h6" component="div">
+                            {project.title}
+                          </Typography>
+                          <Chip
+                            label={project.status === "PENDING" ? "قيد المراجعة" : project.status === "APPROVED" ? "مقبول" : "مرفوض"}
+                            color={
+                              project.status === 'APPROVED'
+                                ? 'success'
+                                : project.status === 'REJECTED'
+                                  ? 'error'
+                                  : 'warning'
+                            }
+                          />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" paragraph>
+                          {project.description}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          عدد الأعضاء: {project.members.length}
+                        </Typography>
+                      </CardContent>
+                      <CardActions>
+                        <Button
+                          size="small"
+                          onClick={() => router.push(`/dashboard/graduation/${project.id}`)}
+                        >
+                          عرض التفاصيل
+                        </Button>
+                        {project.leaderId === userRole && (
+                          <>
+                            <IconButton
+                              size="small"
+                              onClick={() => router.push(`/dashboard/graduation/${project.id}`)}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteProject(project.id)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </>
+                        )}
+                      </CardActions>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </motion.div>
+      </Box>
+
+      {/* Add Project Dialog */}
+      <Dialog open={showAddDialog} onClose={() => setShowAddDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>إضافة مشروع جديد</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="عنوان المشروع"
+            value={newProject.title}
+            onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="وصف المشروع"
+            value={newProject.description}
+            onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+            margin="normal"
+            multiline
+            rows={4}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAddDialog(false)}>إلغاء</Button>
+          <Button onClick={handleAddProject} variant="contained" color="primary">
+            إضافة
+          </Button>
+        </DialogActions>
+      </Dialog>
     </DashboardLayout>
   );
 };

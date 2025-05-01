@@ -67,6 +67,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { text: "الرئيسية", icon: <IconHome />, path: "/dashboard", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
         { text: "المواد", icon: <IconBook />, path: "/dashboard/courses", role: ["PROFESSOR", "ADMIN"] },
         { text: "الطلاب", icon: <IconUsers />, path: "/dashboard/students", role: ["PROFESSOR", "ADMIN"] },
+        { text: "المدرسين", icon: <IconUsers />, path: "/dashboard/professors", role: ["ADMIN"] },
         { text: "الأقسام", icon: <IconSchool />, path: "/dashboard/departments", role: ["ADMIN"] },
         { text: "التقارير", icon: <IconChartBar />, path: "/dashboard/reports", role: ["ADMIN"] },
         // { text: "المحادثات", icon: <IconMessage />, path: "/dashboard/messages", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
@@ -96,6 +97,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                 display: "flex",
                                 justifyContent: "flex-start",
                                 padding: 1,
+                                gap: 2,
                                 width: "100%",
                                 textTransform: "none",
                                 color: "inherit",
@@ -116,24 +118,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 position="fixed"
                 sx={{
                     direction: "rtl",
+                    px: 4,
                     left: { sm: `0` },
                     width: { sm: `100%` },
                 }}
             >
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Toolbar sx={{ display: "flex", direction: "rtl" }}>
-                        <IconButton
-                            color="inherit"
-                            aria-label="open drawer"
-                            edge="start"
-                            onClick={handleDrawerToggle}
-                            sx={{ mr: 2, display: { sm: "none" } }}
-                        >
-                            <IconMenu2 />
-                        </IconButton>
+
                         <Box sx={{ flexGrow: 1 }} />
                         <IconButton onClick={handleMenuOpen}>
-                            <Avatar sx={{ bgcolor: "#184271" }}>
+                            <Avatar sx={{ bgcolor: "white", color: "#184271" }}>
                                 {session?.user?.name?.[0] || "U"}
                             </Avatar>
                         </IconButton>
@@ -148,12 +143,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                 </ListItemIcon>
                                 الملف الشخصي
                             </MenuItem>
-                            <MenuItem onClick={() => router.push("/dashboard/settings")}>
+                            {/* <MenuItem onClick={() => router.push("/dashboard/settings")}>
                                 <ListItemIcon>
                                     <IconSettings />
                                 </ListItemIcon>
                                 الإعدادات
-                            </MenuItem>
+                            </MenuItem> */}
                             <Divider />
                             <MenuItem onClick={handleLogout}>
                                 <ListItemIcon>
@@ -165,7 +160,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </Toolbar>
                     <List sx={{ direction: "rtl", gap: 1 }} className="max-sm:hidden flex" >
                         {menuItems.map((item) => {
-                            let isActive = item.path === pathname;
+                            let isActive = item.path === pathname || pathname.includes(item.path.split("/")[2]);
                             return (
                                 <motion.div
                                     key={item.text}
@@ -193,6 +188,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             )
                         })}
                     </List>
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={{ mr: 2, display: { sm: "none" } }}
+                    >
+                        <IconMenu2 />
+                    </IconButton>
                 </Box>
             </AppBar >
 

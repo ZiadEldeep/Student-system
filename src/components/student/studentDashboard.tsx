@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Course, Exam, Enrollment, User } from "@prisma/client";
+import { Course, Exam, Enrollment, User, ExamResult } from "@prisma/client";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import {
@@ -23,38 +23,16 @@ import {
     LinearProgress,
     Tooltip,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Avatar
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AssessmentIcon from "@mui/icons-material/Assessment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
-import UploadIcon from "@mui/icons-material/Upload";
 import { motion } from "framer-motion";
-import { IconBook } from "@tabler/icons-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 type CourseWithEnrollments = Course & { enrollments: (Enrollment & { student: User })[] };
-type ExamWithCourseId = Exam & { courseId: string };
+type ExamWithCourseId = Exam & { courseId: string, results: (ExamResult & { student: User })[] };
 
 const fetchCourses = async (studentId: string): Promise<CourseWithEnrollments[]> => {
     const response = await axios.get(`/api/courses?studentId=${studentId}`);
@@ -68,6 +46,7 @@ const fetchExams = async (courseIds: string[], studentId: string): Promise<ExamW
 
 export default function StudentDashboard({ studentId }: { studentId: string }) {
     const router = useRouter();
+    let [progress, setProgress] = useState(0);
     const {
         data: courses,
         isLoading: isCoursesLoading,
@@ -84,7 +63,7 @@ export default function StudentDashboard({ studentId }: { studentId: string }) {
         isError: isExamsError,
         refetch: refetchExams,
         error: examsError
-    } = useQuery({
+    } = useQuery<ExamWithCourseId[]>({
         queryKey: ["exams", studentId, courses?.map(c => c.id)],
         enabled: !!courses?.length,
         queryFn: () => fetchExams(courses!.map(c => c.id), studentId)
@@ -93,8 +72,18 @@ export default function StudentDashboard({ studentId }: { studentId: string }) {
     const handleViewExam = (examId: string) => {
         router.push(`/dashboard/exams/${examId}`);
     };
+    const calculateProgress = (courseId: string) => {
+        const courseExams = exams?.filter(e => e.courseId === courseId);
+        const totalExams = courseExams?.length || 0;
+        const completedExams = courseExams?.filter(e => e.results.find(r => r.studentId === studentId) !== undefined).length || 0;
+        setProgress(Math.round((completedExams / totalExams) * 100));
+    };
 
-
+    useEffect(() => {
+        courses?.forEach(course => {
+            calculateProgress(course.id);
+        });
+    }, [exams]);
     if (isCoursesLoading) {
         return <Skeleton variant="rectangular" height={400} />;
     }
@@ -102,7 +91,6 @@ export default function StudentDashboard({ studentId }: { studentId: string }) {
     if (isCoursesError) {
         return <Alert severity="error">حدث خطأ في تحميل المواد: {(coursesError as Error).message}</Alert>;
     }
-
     return (
         <Box sx={{ p: 3 }}>
             {/* <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
@@ -126,13 +114,6 @@ export default function StudentDashboard({ studentId }: { studentId: string }) {
 
                                 <Stack direction="row" spacing={5} sx={{ mb: 2 }}>
                                     <Chip
-                                        icon={<PeopleIcon />}
-                                        label={`${course.enrollments.length} طلاب`}
-                                        variant="outlined"
-                                        sx={{ fontSize: '12px', padding: '4px 8px' }}
-                                        size="small"
-                                    />
-                                    <Chip
                                         icon={<EventIcon />}
                                         label={`${exams?.filter(e => e.courseId === course.id).length || 0} امتحانات`}
                                         variant="outlined"
@@ -147,45 +128,12 @@ export default function StudentDashboard({ studentId }: { studentId: string }) {
                                     </Typography>
                                     <LinearProgress
                                         variant="determinate"
-                                        value={70}
+                                        value={progress}
                                         sx={{ height: 8, borderRadius: 4 }}
                                     />
                                 </Box>
 
-                                <Accordion sx={{ mt: 2 }}>
-                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                        <Typography>الطلاب المتسجلين</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <TableContainer>
-                                            <Table size="small">
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableCell>الطالب</TableCell>
-                                                        <TableCell>الايدي</TableCell>
-                                                        <TableCell>البريد الالكتروني</TableCell>
-                                                    </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {course.enrollments.map((enrollment) => (
-                                                        <TableRow key={enrollment.student.id}>
-                                                            <TableCell>
-                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                    <Avatar sx={{ width: 24, height: 24 }}>
-                                                                        {enrollment.student.name.charAt(0)}
-                                                                    </Avatar>
-                                                                    {enrollment.student.name}
-                                                                </Box>
-                                                            </TableCell>
-                                                            <TableCell>{enrollment.student.id}</TableCell>
-                                                            <TableCell>{enrollment.student.email}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </TableContainer>
-                                    </AccordionDetails>
-                                </Accordion>
+
 
                                 <Accordion sx={{ mt: 2 }}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -205,14 +153,14 @@ export default function StudentDashboard({ studentId }: { studentId: string }) {
                                                             <ListItemText
                                                                 primary={exam.title}
                                                                 secondary={
-                                                                    <Stack direction="row" spacing={1}>
+                                                                    <Box sx={{ display: 'flex', gap: 1 }} component={"span"}>
                                                                         <Typography variant="caption">
                                                                             البدء: {format(new Date(exam.startTime), 'dd/MM/yyyy HH:mm', { locale: ar })}
                                                                         </Typography>
                                                                         <Typography variant="caption">
                                                                             الانتهاء: {format(new Date(exam.endTime), 'dd/MM/yyyy HH:mm', { locale: ar })}
                                                                         </Typography>
-                                                                    </Stack>
+                                                                    </Box>
                                                                 }
                                                             />
                                                             <Stack direction="row" spacing={1}>

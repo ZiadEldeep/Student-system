@@ -388,8 +388,8 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                                 sx={{ mb: 3 }}
                             >
                                 <Tab label="وصف المادة" />
-                                <Tab label="الطلاب المسجلين" />
-                                <Tab label="الامتحانات" />
+                                {canEdit && <Tab label="الطلاب المسجلين" />}
+                                {canEdit && <Tab label="الامتحانات" />}
                             </Tabs>
 
                             {tabValue === 0 && (
@@ -400,7 +400,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                                 </Box>
                             )}
 
-                            {tabValue === 1 && (
+                            {tabValue === 1 && canEdit && (
                                 <>
                                     <TableContainer component={Paper}>
                                         <Table>
@@ -480,7 +480,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                                 </>
                             )}
 
-                            {tabValue === 2 && (
+                            {tabValue === 2 && canEdit && (
                                 <List>
                                     {course.exams.map((exam) => (
                                         <motion.div
