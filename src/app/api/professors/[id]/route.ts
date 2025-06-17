@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 // GET /api/professors/[id]
 export async function GET(
@@ -57,6 +58,10 @@ export async function PUT(
 ) {
     try {
         const body = await request.json()
+        if (body.password.trim().length > 0) {
+            const hashedPassword = await bcrypt.hash(body.password, 10);
+            body.password = hashedPassword;
+        }
         const professor = await prisma.user.update({
             where: {
                 id: (await params).id,

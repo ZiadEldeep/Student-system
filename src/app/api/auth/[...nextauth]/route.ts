@@ -17,27 +17,28 @@ const handler = NextAuth({
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
                 }
-
+                console.log(credentials);
                 const user = await prisma.user.findUnique({
                     where: { email: credentials.email },
                 });
-
+                
                 if (!user) {
                     throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
                 }
-
+                
                 if (!user.isVerified) {
                     throw new Error("يرجى الانتظار حتى يتم الموافقة على طلب إنشاء الحساب");
                 }
-
+                
                 const isPasswordValid = await bcrypt.compare(
                     credentials.password,
                     user.password
                 );
-
+                
                 if (!isPasswordValid) {
                     throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
                 }
+                console.log(user);
 
                 return {
                     id: user.id,
