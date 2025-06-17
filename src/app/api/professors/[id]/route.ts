@@ -57,9 +57,10 @@ export async function PUT(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const body = await request.json()
-        if (body.password.trim().length > 0) {
-            const hashedPassword = await bcrypt.hash(body.password, 10);
+        const {password,...body} = await request.json()
+        if (password) {
+            console.log(password);
+            const hashedPassword = await bcrypt.hash(password, 10);
             body.password = hashedPassword;
         }
         const professor = await prisma.user.update({
@@ -68,10 +69,7 @@ export async function PUT(
                 role: 'PROFESSOR',
             },
             data: {
-                name: body.name,
-                email: body.email,
-                departmentId: body.departmentId,
-                isVerified: body.isVerified,
+                ...body,
             },
         })
         return NextResponse.json(professor)

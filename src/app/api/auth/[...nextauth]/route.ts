@@ -21,6 +21,7 @@ const handler = NextAuth({
                 const user = await prisma.user.findUnique({
                     where: { email: credentials.email },
                 });
+                console.log(user);
                 
                 if (!user) {
                     throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
@@ -34,11 +35,10 @@ const handler = NextAuth({
                     credentials.password,
                     user.password
                 );
-                
+                console.log(isPasswordValid,user.password,credentials.password);
                 if (!isPasswordValid) {
                     throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
                 }
-                console.log(user);
 
                 return {
                     id: user.id,

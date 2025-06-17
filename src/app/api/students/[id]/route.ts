@@ -9,9 +9,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params; 
-    const updateData= await request.json();
-    if (updateData.password.trim().length > 0) {
-        const hashedPassword = await bcrypt.hash(updateData.password, 10);
+    const {password,...updateData} = await request.json();
+    if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
         updateData.password = hashedPassword;
     }
 
