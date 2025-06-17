@@ -76,9 +76,11 @@ export default function HomePage() {
     },
   ];
 
+
+
   const teamMembers = [
     {
-      name: "أحمد محمد",
+      name: " Mustafa Medhat Mohammed Salem",
       role: "مطور الواجهة الأمامية",
       image: "/team/ahmed.jpg",
       social: {
@@ -88,7 +90,7 @@ export default function HomePage() {
       },
     },
     {
-      name: "محمد علي",
+      name: "Karim Sabry Mohamed",
       role: "مطور الواجهة الخلفية",
       image: "/team/mohamed.jpg",
       social: {
@@ -98,7 +100,7 @@ export default function HomePage() {
       },
     },
     {
-      name: "سارة أحمد",
+      name: "Ahmed AbdElfatah Mohammed",
       role: "مصممة واجهة المستخدم",
       image: "/team/sara.jpg",
       social: {
@@ -107,7 +109,37 @@ export default function HomePage() {
         twitter: "https://twitter.com/sara",
       },
     },
-  ];
+    {
+      name: "Ahmed Mohamed Tawfik",
+      role: "مصممة واجهة المستخدم",
+      image: "/team/sara.jpg",
+      social: {
+        github: "https://github.com/sara",
+        linkedin: "https://linkedin.com/in/sara",
+        twitter: "https://twitter.com/sara",
+      },
+    },
+    {
+      name: "Ahmed Bekheit Farghaly",
+      role: "مصممة واجهة المستخدم",
+      image: "/team/sara.jpg",
+      social: {
+        github: "https://github.com/sara",
+        linkedin: "https://linkedin.com/in/sara",
+        twitter: "https://twitter.com/sara",
+      },
+    },
+    {
+      name: "Esmail Ebrahim Eldesoky",
+      role: "مصممة واجهة المستخدم",
+      image: "/team/sara.jpg",
+      social: {
+        github: "https://github.com/sara",
+        linkedin: "https://linkedin.com/in/sara",
+        twitter: "https://twitter.com/sara",
+      },
+    },
+    ];
 
   return (
     <>
@@ -282,12 +314,12 @@ export default function HomePage() {
                     viewport={{ once: true }}
                   >
                     <Card sx={{ maxWidth: 345, mx: "auto" }}>
-                      <CardMedia
+                      {/* <CardMedia
                         component="img"
                         height="200"
                         image={member.image}
                         alt={member.name}
-                      />
+                      /> */}
                       <CardContent>
                         <Typography gutterBottom variant="h5" component="div">
                           {member.name}
