@@ -6,6 +6,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { SessionProvider } from "next-auth/react";
 import QueryProvider from "@/components/providers/IntlProvider";
+import ChatBotButton from "@/components/ChatBotButton";
 const inter = Inter({ subsets: ["latin"] });
 
 // export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default function RootLayout({
             <ThemeProvider theme={theme}>
               <CssBaseline />
               {children}
+              <ChatBotButton />
             </ThemeProvider>
           </QueryProvider>
         </SessionProvider>

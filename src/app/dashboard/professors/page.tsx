@@ -24,6 +24,8 @@ import {
     Select,
     MenuItem,
     Skeleton,
+    Switch,
+    FormControlLabel,
 } from "@mui/material";
 import {
     IconEdit,
@@ -41,6 +43,7 @@ interface Professor {
         id: string;
         name: string;
     };
+    isVerified: boolean;
     password?: string;
 }
 
@@ -98,6 +101,7 @@ export default function ProfessorsPage() {
                 email: '',
                 department: { id: '', name: '' },
                 password: '',
+                isVerified: false,
             });
         }
         setOpenDialog(true);
@@ -125,6 +129,7 @@ export default function ProfessorsPage() {
                     email: selectedProfessor?.email,
                     password: selectedProfessor?.password,
                     departmentId: selectedProfessor?.department.id,
+                    isVerified: selectedProfessor?.isVerified,
                 }),
             })
 
@@ -209,6 +214,7 @@ export default function ProfessorsPage() {
                             <TableCell>الاسم</TableCell>
                             <TableCell>البريد الإلكتروني</TableCell>
                             <TableCell>القسم</TableCell>
+                            <TableCell>الحالة</TableCell>
                             <TableCell>الإجراءات</TableCell>
                         </TableRow>
                     </TableHead>
@@ -223,6 +229,13 @@ export default function ProfessorsPage() {
                                 <TableCell>{professor.name}</TableCell>
                                 <TableCell>{professor.email}</TableCell>
                                 <TableCell>{professor.department?.name}</TableCell>
+                                <TableCell>
+                                    {professor.isVerified ? (
+                                        <Typography color="success.main">تم التفعيل</Typography>
+                                    ) : (
+                                        <Typography color="warning.main">في انتظار التفعيل</Typography>
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     <IconButton
                                         color="primary"
@@ -309,6 +322,15 @@ export default function ProfessorsPage() {
                                 </MenuItem>
                             ))}
                         </Select>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
+                        <Button
+                                variant="contained"
+                                color={!selectedProfessor?.isVerified ? "success" : "error"}
+                                onClick={() => setSelectedProfessor({ ...selectedProfessor!, isVerified: !selectedProfessor?.isVerified })}
+                            >
+                                {!selectedProfessor?.isVerified ? "تفعيل الأستاذ" : "تعطيل الأستاذ"}
+                            </Button>
+                        </Box>
                     </Box>
                 </DialogContent>
                 <DialogActions>

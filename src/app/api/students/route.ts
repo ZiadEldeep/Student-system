@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Prisma, UserRole } from '@prisma/client'
+import bcrypt from 'bcrypt'
 // GET /api/students
 export async function GET(request: Request) {
     const searchParams = new URL(request.url).searchParams;
@@ -53,13 +54,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json()
+        const hashedPassword = await bcrypt.hash(body.password, 10);
         const student = await prisma.user.create({
             data: {
                 name: body.name,
                 email: body.email,
-                password: body.password,
+                password: hashedPassword,
                 role: 'STUDENT',
                 departmentId: body.departmentId,
+                isVerified: body.isVerified,
             },
         })
         return NextResponse.json(student)

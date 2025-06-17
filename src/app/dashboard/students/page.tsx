@@ -26,6 +26,8 @@ import {
     Select,
     MenuItem,
     Skeleton,
+    FormControlLabel,
+    Switch,
 } from "@mui/material";
 import {
     IconEdit,
@@ -45,6 +47,7 @@ interface Student {
         name: string;
     };
     status: string;
+    isVerified: boolean;
     password?: string;
 }
 
@@ -104,6 +107,7 @@ export default function StudentsPage() {
                 email: '',
                 department: { id: '', name: '' },
                 status: 'نشط',
+                isVerified: false,
                 password: '',
             });
         }
@@ -128,6 +132,7 @@ export default function StudentsPage() {
                         email: selectedStudent?.email,
                         password: selectedStudent?.password,
                         departmentId: selectedStudent?.department.id,
+                        isVerified: selectedStudent?.isVerified,
                     }),
                 });
 
@@ -149,6 +154,7 @@ export default function StudentsPage() {
                         email: selectedStudent?.email,
                         password: selectedStudent?.password,
                         departmentId: selectedStudent?.department.id,
+                        isVerified: selectedStudent?.isVerified,
                     }),
                 });
 
@@ -220,13 +226,13 @@ export default function StudentsPage() {
                     />
                 </Box>
                 <Box sx={{ textAlign: "left" }}>
-                    <Button
+                    {session?.user?.role === "ADMIN" && <Button
                         variant="contained"
                         startIcon={<IconPlus />}
                         onClick={() => handleOpenDialog()}
                     >
                         إضافة طالب جديد
-                    </Button>
+                    </Button>}
                 </Box>
             </Box>
 
@@ -237,7 +243,7 @@ export default function StudentsPage() {
                             <TableCell>الاسم</TableCell>
                             <TableCell>البريد الإلكتروني</TableCell>
                             <TableCell>القسم</TableCell>
-                            {/* <TableCell>الحالة</TableCell> */}
+                            <TableCell>الحالة</TableCell>
                             <TableCell>الإجراءات</TableCell>
                         </TableRow>
                     </TableHead>
@@ -252,7 +258,13 @@ export default function StudentsPage() {
                                 <TableCell>{student.name}</TableCell>
                                 <TableCell>{student.email}</TableCell>
                                 <TableCell>{student.department?.name}</TableCell>
-                                {/* <TableCell>{student.status}</TableCell> */}
+                                <TableCell>
+                                    {student.isVerified ? (
+                                        <Typography color="success.main">تم التفعيل</Typography>
+                                    ) : (
+                                        <Typography color="warning.main">في انتظار التفعيل</Typography>
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     <IconButton
                                         color="primary"
@@ -337,6 +349,15 @@ export default function StudentsPage() {
                                 </MenuItem>
                             ))}
                         </Select>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Button
+                                variant="contained"
+                                color={!selectedStudent?.isVerified ? "success" : "error"}
+                                onClick={() => setSelectedStudent({ ...selectedStudent!, isVerified: !selectedStudent?.isVerified })}
+                            >
+                                {!selectedStudent?.isVerified ? "تفعيل الطالب" : "تعطيل الطالب"}
+                            </Button>
+                        </Box>
                     </Box>
                 </DialogContent>
                 <DialogActions>

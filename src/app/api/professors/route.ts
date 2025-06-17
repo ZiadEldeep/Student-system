@@ -29,6 +29,7 @@ export async function POST(request: Request) {
                 password: body.password,
                 role: 'PROFESSOR',
                 departmentId: body.departmentId,
+                isVerified: body.isVerified,
             },
         })
         return NextResponse.json(professor)

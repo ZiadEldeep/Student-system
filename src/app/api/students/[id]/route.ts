@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-
+import bcrypt from 'bcrypt'
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const student = await prisma.user.findUnique({ where: { id, role: "STUDENT" } });
@@ -8,9 +8,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    const { name, email, password, departmentId } = await request.json();
-    const student = await prisma.user.update({ where: { id, role: "STUDENT" }, data: { name, email, password, departmentId } });
+    const { id } = await params; 
+    const updateData= await request.json();
+    if (updateData.password) {
+        const hashedPassword = await bcrypt.hash(updateData.password, 10);
+        updateData.password = hashedPassword;
+    }
+
+    const student = await prisma.user.update({ 
+        where: { id, role: "STUDENT" }, 
+        data: updateData 
+    });
     return NextResponse.json(student);
 }
 

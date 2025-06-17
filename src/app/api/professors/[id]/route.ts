@@ -66,6 +66,7 @@ export async function PUT(
                 name: body.name,
                 email: body.email,
                 departmentId: body.departmentId,
+                isVerified: body.isVerified,
             },
         })
         return NextResponse.json(professor)

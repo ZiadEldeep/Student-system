@@ -70,6 +70,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { text: "المدرسين", icon: <IconUsers />, path: "/dashboard/professors", role: ["ADMIN"] },
         { text: "الأقسام", icon: <IconSchool />, path: "/dashboard/departments", role: ["ADMIN"] },
         { text: "التقارير", icon: <IconChartBar />, path: "/dashboard/reports", role: ["ADMIN"] },
+        { text: "المحادثات", icon: <IconMessage />, path: "/dashboard/chats", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
         // { text: "المحادثات", icon: <IconMessage />, path: "/dashboard/messages", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
         { text: "مشاريع التخرج", icon: <IconCertificate />, path: "/dashboard/graduation", role: ["ADMIN", "PROFESSOR", "STUDENT"] },
     ];

@@ -21,6 +21,7 @@ const Navbar = () => {
     { text: 'Students', path: '/dashboard/students', role: ['PROFESSOR', 'ADMIN'] },
     { text: 'Departments', path: '/dashboard/departments', role: ['ADMIN'] },
     { text: 'Reports', path: '/dashboard/reports', role: ['ADMIN'] },
+    { text: 'Chats', path: '/dashboard/chats', role: ['ADMIN', 'PROFESSOR', 'STUDENT'] },
     { text: 'Messages', path: '/dashboard/messages', role: ['ADMIN', 'PROFESSOR', 'STUDENT'] },
     { text: 'Graduation Projects', path: '/dashboard/graduation', role: ['ADMIN', 'PROFESSOR', 'STUDENT'] },
   ];

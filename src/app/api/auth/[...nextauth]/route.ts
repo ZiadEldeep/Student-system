@@ -26,6 +26,10 @@ const handler = NextAuth({
                     throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
                 }
 
+                if (!user.isVerified) {
+                    throw new Error("يرجى الانتظار حتى يتم الموافقة على طلب إنشاء الحساب");
+                }
+
                 const isPasswordValid = await bcrypt.compare(
                     credentials.password,
                     user.password
